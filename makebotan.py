@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, shutil, sys, platform, glob, fileinput
+import os, shutil, sys, platform, glob
 from subprocess import call
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
@@ -14,12 +14,14 @@ def runClean():
     shutil.rmtree(botanDir + "/build", True)
     botanObjs = [ 
         botanDir + "/botan",
-        botanDir + "/botan-test",
+        botanDir + "/botan-test*",
         botanDir + "/botan_all*",
         botanDir + "/libbotan*",
-        botanDir + "botan*.lib",
-        botanDir + "botan*.exe",
-        botanDir + "*.dll"
+        botanDir + "/botan*.lib",
+        botanDir + "/botan*.exe",
+        botanDir + "/*.dll",
+        botanDir + "/*.pdb",
+        botanDir + "/Makefile",
     ]
     for p in botanObjs:
         for f in glob.glob(p):
@@ -27,7 +29,12 @@ def runClean():
             if (os.path.exists(f) == True):
                 os.remove(f)
 
-def runConfigurePosix(buildMode):
+def runConfigure(debug):
+    if (debug == True):
+        buildMode = "debug"
+    else:
+        buildMode = "release"
+        
     cmd = "./configure.py" + \
         " --disable-shared" + \
         " --disable-modules=tls" + \
@@ -37,30 +44,9 @@ def runConfigurePosix(buildMode):
         " --via-amalgamation" + \
         " --disable-avx2" + \
         " --maintainer-mode"
-    run(cmd)
-
-def runConfigureWin(buildMode):
-    cmd = "configure.py" + \
-        " --disable-shared" + \
-        " --disable-modules=tls" + \
-        " --prefix=" + baseDir + "/../install" + \
-        " --libdir=" + baseDir + "/../install/lib/botan/" + buildMode + \
-        " --build-mode=" + buildMode + \
-        " --via-amalgamation" + \
-        " --maintainer-mode" + \
-        " --cpu=i386"
-    run(cmd)
-
-def runConfigure(debug):
-    if (debug == True):
-        buildMode = "debug"
-    else:
-        buildMode = "release"
-    
     if (platform.system() == "Windows"):
-        runConfigureWin(buildMode)
-    else:
-        runConfigurePosix(buildMode)
+        cmd = "python " + cmd + " --cpu=i386"
+    run(cmd)
     
 def runMakePosix():
     cmd = "make -j4 install"
@@ -70,9 +56,9 @@ def runMakeWin():
     with open('Makefile', 'r') as file :
         makefile = file.read()
 
-    makefile = makefile.replace('cl \/MD', 'cl \/MT')
+    makefile = makefile.replace('cl /MD', 'cl /MT')
 
-    with open('file.txt', 'w') as file:
+    with open('Makefile', 'w') as file:
         file.write(makefile)
     
     cmd = "nmake install"
