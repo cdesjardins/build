@@ -38,8 +38,8 @@ def runConfigure(debug):
     cmd = "./configure.py" + \
         " --disable-shared" + \
         " --disable-modules=tls" + \
-        " --prefix=" + baseDir + "/../install" + \
-        " --libdir=" + baseDir + "/../install/lib/botan/" + buildMode + \
+        " --prefix=" + botanDir + "/install" + \
+        " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
         " --build-mode=" + buildMode + \
         " --via-amalgamation" + \
         " --disable-avx2" + \
@@ -78,6 +78,7 @@ def runBuild(debug):
     os.chdir(baseDir)
 
 def main(argv):
+    shutil.rmtree(botanDir + "/install", True)
     runBuild(True)
     runBuild(False)
 
