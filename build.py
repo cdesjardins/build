@@ -115,7 +115,7 @@ def combombBuild(buildClean, buildType):
     qmake = which("qmake")
     run(qmake + " " + combombSrcDir + " CONFIG+=" + buildType)
     if (platform.system() == "Windows"):
-        run(which("jom") + "-j5 " + buildType)
+        run(which("jom") + " -j5 " + buildType)
     else:
         run("make -j5")
     buildLog(combombSrcDir, buildTarget)
