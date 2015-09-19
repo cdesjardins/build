@@ -40,7 +40,7 @@ class uncrustify:
         CreateVer = createVersion.CreateVer()
         gitVerStr = CreateVer.getVerStr()
         if (gitVerStr.find("dirty") > 0):
-            raw_input("Building on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "): ")
+            input("Building on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "): ")
         return gitVerStr
 
 def run(cmd):
@@ -79,7 +79,7 @@ def cleanTarget(buildTarget, buildClean):
         os.makedirs(buildTarget)
 
 def handleComBombDirty(gitVerStr, combombSrcDir):
-    for k, v in gitVersions.iteritems():
+    for k, v in gitVersions.items():
         if (v != gitVerStr):
             c = Chdir(combombSrcDir)
             dirty = True
@@ -151,7 +151,7 @@ def zipItWindows(filename):
     files["ComBombGui/release/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
     filename += ".zip"
     combombZip = zipfile.ZipFile(filename, "w")
-    for k, v in files.iteritems():
+    for k, v in files.items():
         combombZip.write(k, v, zipfile.ZIP_DEFLATED)
     
 def zipItPosix(filename):
@@ -172,7 +172,7 @@ def zipItPosix(filename):
     files["/usr/lib/x86_64-linux-gnu/libxcb-util.so.0"]         = "ComBomb/platforms/libxcb-util.so.0"
     filename += ".tar.bz2"
     file = tarfile.open(filename, "w:bz2")
-    for k, v in files.iteritems():
+    for k, v in files.items():
         print(os.path.realpath(k))
         file.add(os.path.realpath(k), v)
 
@@ -208,7 +208,7 @@ def usage(builds):
     print(" -c --clean")
     print("The following modules can be individually built")
     for b in builds:
-        print ("    --" + b)
+        print("    --" + b)
     os._exit(1)
 
 def main(argv):
@@ -225,7 +225,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hdrcv", args)
     except getopt.GetoptError as e:
-        print "Error: " + str(e)
+        print("Error: " + str(e))
         usage(builds)
     for opt, arg in opts:
         if (opt in ('-h', '--help')):
@@ -238,7 +238,7 @@ def main(argv):
             buildClean = True
         if (opt in ('-v', '--verbose')):
             buildVerbose = True
-        if opt[2:] in buildVals.keys():
+        if opt[2:] in list(buildVals.keys()):
             buildsToRun.append(opt[2:])
 
     if (len(buildsToRun) > 0):
