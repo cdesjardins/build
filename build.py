@@ -8,7 +8,11 @@ from subprocess import call
 from subprocess import Popen, PIPE
 
 sys.path.append('../ComBomb/')
-import createVersion
+haveCreateVersion = True
+try:
+    import createVersion
+except ImportError:
+    haveCreateVersion = False
 
 releaseNotes = "releasenotes.txt"
 gitVersions = {}
@@ -34,11 +38,13 @@ class uncrustify:
         if ((platform.system() == "Linux") and (self.buildType == "release") and (which("uncrustify", False) != None)):
             self.callUncrustify(directory, "*.cpp")
             self.callUncrustify(directory, "*.h")
-        c = Chdir(directory)
-        CreateVer = createVersion.CreateVer()
-        gitVerStr = CreateVer.getVerStr()
-        if (gitVerStr.find("dirty") > 0):
-            input("Building on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "): ")
+        gitVerStr = ""
+        if (haveCreateVersion == True):
+            c = Chdir(directory)
+            CreateVer = createVersion.CreateVer()
+            gitVerStr = CreateVer.getVerStr()
+            if (gitVerStr.find("dirty") > 0):
+                input("Building on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "): ")
         return gitVerStr
 
 def run(cmd):
