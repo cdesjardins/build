@@ -22,20 +22,18 @@ class Chdir:
         os.chdir(self.origdir)
 
 class uncrustify:
-    def __init__(self):
-        self.home = os.path.expanduser("~")
-        self.uncrust = self.home + "/bin/call_Uncrustify.sh"
-        self.config  = self.home + "/bin/uncrustify.cfg"
+    def __init__(self, buildType):
+        self.home = os.path.dirname(os.path.realpath(__file__))
+        self.uncrust = self.home + "/call_Uncrustify.sh"
+        self.buildType = buildType.lower()
 
     def callUncrustify(self, directory, ext):
-        process = Popen([self.uncrust, directory, ext])
-        process.wait()
+        run(self.uncrust + " " + directory + " " + ext)
 
     def uncrustify(self, directory):
-        if (platform.system() == "Linux"):
-            if ((os.path.isfile(self.uncrust) == True) and (os.path.isfile(self.config) == True)):
-                self.callUncrustify(directory, "cpp")
-                self.callUncrustify(directory, "h")
+        if ((platform.system() == "Linux") and (self.buildType == "release") and (which("uncrustify", False) != None)):
+            self.callUncrustify(directory, "*.cpp")
+            self.callUncrustify(directory, "*.h")
         c = Chdir(directory)
         CreateVer = createVersion.CreateVer()
         gitVerStr = CreateVer.getVerStr()
@@ -63,7 +61,7 @@ def cmakeBuildWindows(baseDir, buildType, buildVerbose):
 def cmakeBuild(baseDir, buildType, buildClean, buildVerbose):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
-    gitVerStr = uncrustify().uncrustify("../" + baseDir)
+    gitVerStr = uncrustify(buildType).uncrustify("../" + baseDir)
     #gitVerStr = "v2015.257-2-g45287fa-dirty"
     gitVersions[baseDir] = gitVerStr
     c = Chdir(buildTarget)
@@ -107,7 +105,7 @@ def combombBuild(buildClean, buildType):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
-    gitVerStr = uncrustify().uncrustify(combombSrcDir)
+    gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
     newGitVerStr = handleComBombDirty(gitVerStr, combombSrcDir)
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
@@ -130,7 +128,7 @@ def delBuildTree(delDir):
             break
     return not os.path.exists(delDir)
 
-def which(file):
+def which(file, fatal = True):
     if (platform.system() == "Windows"):
         file += ".exe"
     for path in os.environ["PATH"].split(os.pathsep):
