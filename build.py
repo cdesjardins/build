@@ -6,7 +6,7 @@
 import shutil, sys, os, platform, zipfile, tarfile, getopt, atexit
 from subprocess import call
 from subprocess import Popen, PIPE
-
+sys.dont_write_bytecode = True
 sys.path.append('../ComBomb/')
 haveCreateVersion = True
 try:
@@ -14,6 +14,8 @@ try:
 except ImportError:
     haveCreateVersion = False
 
+from which import which
+    
 releaseNotes = "releasenotes.txt"
 gitVersions = {}
 
@@ -133,16 +135,6 @@ def delBuildTree(delDir):
         if (retries > 10):
             break
     return not os.path.exists(delDir)
-
-def which(file, fatal = True):
-    if (platform.system() == "Windows"):
-        file += ".exe"
-    for path in os.environ["PATH"].split(os.pathsep):
-        if os.path.exists(path + "/" + file):
-                return path + "/" + file
-    print(file + " not found")
-    os._exit(1)
-    return None
 
 files = {
     "../../../ComBomb/ComBombGui/images/ComBomb128.png": "ComBomb/ComBomb128.png",

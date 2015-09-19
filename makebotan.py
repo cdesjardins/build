@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os, shutil, sys, platform, glob
 from subprocess import call
+sys.dont_write_bytecode = True
+from which import which
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
 botanDir = baseDir + "/../botan"
@@ -55,13 +57,15 @@ def runMakePosix():
 def runMakeWin():
     with open('Makefile', 'r') as file :
         makefile = file.read()
-
     makefile = makefile.replace('cl /MD', 'cl /MT')
-
     with open('Makefile', 'w') as file:
         file.write(makefile)
-    
-    cmd = "nmake install"
+        
+    jom = which("jom", False)
+    if (jom == None):
+        cmd = "nmake install"
+    else:
+        cmd = "jom install -j5"
     run(cmd)
 
 def runMake():
