@@ -101,7 +101,6 @@ def main(argv):
         runBootstrap()
         extraArgs = [
             "--with-system",
-            "--with-filesystem",
             ]
         runB2(extraArgs)
     except:
