@@ -58,7 +58,9 @@ def run(cmd):
 
 def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs):
     cmake = "cmake ../../../" + baseDir + " -DCMAKE_BUILD_TYPE=" + buildType
-    make = "make -j " + buildJobs + " install VERBOSE=" + str(int(buildVerbose))
+    make = "make -j " + buildJobs + " install"
+    if (buildVerbose == True):
+        make += " VERBOSE=1"
     run(cmake)
     run(make)
 
