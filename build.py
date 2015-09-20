@@ -56,29 +56,28 @@ def run(cmd):
     if (call(cmd.split(" "))):
         sys.exit(1)
 
-def cmakeBuildLinux(baseDir, buildType, buildVerbose):
+def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs):
     cmake = "cmake ../../../" + baseDir + " -DCMAKE_BUILD_TYPE=" + buildType
-    make = "make -j8 install VERBOSE=" + str(int(buildVerbose))
+    make = "make -j " + buildJobs + " install VERBOSE=" + str(int(buildVerbose))
     run(cmake)
     run(make)
 
-def cmakeBuildWindows(baseDir, buildType, buildVerbose):
+def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
     cmake = "cmake ../../../" + baseDir
     make = "cmake --build . --target install --config " + buildType
     run(cmake)
     run(make)
 
-def cmakeBuild(baseDir, buildType, buildClean, buildVerbose):
+def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
     gitVerStr = uncrustify(buildType).uncrustify("../" + baseDir)
-    #gitVerStr = "v2015.257-2-g45287fa-dirty"
     gitVersions[baseDir] = gitVerStr
     c = Chdir(buildTarget)
     if (platform.system() == "Linux"):    
-        cmakeBuildLinux(baseDir, buildType, buildVerbose)
+        cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs)
     else:
-        cmakeBuildWindows(baseDir, buildType, buildVerbose)
+        cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs)
 
 def cleanTarget(buildTarget, buildClean):
     if (buildClean == True):
@@ -111,7 +110,7 @@ def cleanupComBombDirty(gitVerStr, combombSrcDir):
     cmd = "git tag -d " + gitVerStr
     run(cmd)
 
-def combombBuild(buildClean, buildType):
+def combombBuild(buildClean, buildType, buildJobs):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
@@ -123,9 +122,9 @@ def combombBuild(buildClean, buildType):
     qmake = which("qmake")
     run(qmake + " " + combombSrcDir + " CONFIG+=" + buildType)
     if (platform.system() == "Windows"):
-        run(which("jom") + " -j5 " + buildType)
+        run(which("jom") + " -j" + buildJobs + " " + buildType)
     else:
-        run("make -j5")
+        run("make -j" + buildJobs)
     buildLog(combombSrcDir, buildTarget)
     zipIt(newGitVerStr)
 
@@ -204,12 +203,14 @@ def usage(builds):
     print(" -r --release")
     print(" -v --verbose")
     print(" -c --clean")
+    print(" -j#")
     print("The following modules can be individually built")
     for b in builds:
         print("    --" + b)
     os._exit(1)
 
 def main(argv):
+    buildJobs = 4
     buildClean = False
     buildVerbose = False
     buildType = "Release"
@@ -221,7 +222,7 @@ def main(argv):
     args.extend(builds)
     buildsToRun = []
     try:
-        opts, args = getopt.getopt(argv, "hdrcv", args)
+        opts, args = getopt.getopt(argv, "hdrcvj:", args)
     except getopt.GetoptError as e:
         print("Error: " + str(e))
         usage(builds)
@@ -236,6 +237,8 @@ def main(argv):
             buildClean = True
         if (opt in ('-v', '--verbose')):
             buildVerbose = True
+        if (opt in ('-j')):
+            buildJobs = arg
         if opt[2:] in list(buildVals.keys()):
             buildsToRun.append(opt[2:])
 
@@ -247,13 +250,13 @@ def main(argv):
     if (buildClean == True):
         delBuildTree("../install")
     if (buildVals["CDLogger"] == True):
-        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose)
+        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs)
     if (buildVals["cppssh"] == True):
-        cmakeBuild("cppssh", buildType, buildClean, buildVerbose)
+        cmakeBuild("cppssh", buildType, buildClean, buildVerbose, buildJobs)
     if (buildVals["QueuePtr"] == True):
-        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose)
+        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs)
     if (buildVals["ComBomb"] == True):
-        combombBuild(buildClean, buildType)
+        combombBuild(buildClean, buildType, buildJobs)
     print("Done")
 
 if __name__ == "__main__":
