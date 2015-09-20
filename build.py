@@ -46,7 +46,7 @@ class uncrustify:
             CreateVer = createVersion.CreateVer()
             gitVerStr = CreateVer.getVerStr()
             if (gitVerStr.find("dirty") > 0):
-                print("Building on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "): ")
+                print("\033[31mBuilding on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "):\033[0m"),
                 sys.stdout.flush()
                 sys.stdin.read(1)
         return gitVerStr
@@ -210,7 +210,7 @@ def usage(builds):
     os._exit(1)
 
 def main(argv):
-    buildJobs = 4
+    buildJobs = "4"
     buildClean = False
     buildVerbose = False
     buildType = "Release"
