@@ -1,0 +1,9 @@
+[Desktop Entry]
+Categories=Development;IDE;GTK;
+Comment=The turbo encabulator of terminal emulators.
+Exec=/usr/bin/ComBomb.sh
+Icon=ComBomb
+Name=ComBomb
+MimeType=x-scheme-handler/mailto;
+Terminal=false
+Type=Application
