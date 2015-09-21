@@ -43,7 +43,6 @@ def runConfigure(debug):
         " --prefix=" + botanDir + "/install" + \
         " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
         " --build-mode=" + buildMode + \
-        " --via-amalgamation" + \
         " --disable-avx2" + \
         " --maintainer-mode"
     if (platform.system() == "Windows"):
