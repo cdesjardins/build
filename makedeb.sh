@@ -11,7 +11,7 @@ mkdir -p build/ComBomb/$PACKAGE/$INSTDIR/share/pixmaps
 mkdir -p build/ComBomb/$PACKAGE/DEBIAN
 
 
-echo "Package: ComBomb" > build/ComBomb/$PACKAGE/DEBIAN/control
+echo "Package: combomb" > build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Version: $VERSION" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Section: base" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Priority: optional" >> build/ComBomb/$PACKAGE/DEBIAN/control
