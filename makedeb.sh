@@ -17,9 +17,10 @@ echo "Version: $VERSION" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Section: base" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Priority: optional" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Architecture: amd64" >> build/ComBomb/$PACKAGE/DEBIAN/control
-#echo "Depends: libsomethingorrather (>= 1.2.13), anotherDependency (>= 1.2.6)" >> build/ComBomb/DEBIAN/control
+#echo "Depends: libbotan-1.11-0 (>= 1.11), libboost-system (>= 1.49)" >> build/ComBomb/DEBIAN/control
 echo "Maintainer: Chris Desjardins <cjd@chrisd.info>" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Installed-Size: $INSTSIZE" >> build/ComBomb/$PACKAGE/DEBIAN/control
+echo "Homepage: http://combomb.chrisd.info" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo "Description: ComBomb" >> build/ComBomb/$PACKAGE/DEBIAN/control
 echo " The turbo encabulator of terminal emulators" >> build/ComBomb/$PACKAGE/DEBIAN/control
 
