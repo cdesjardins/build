@@ -82,8 +82,8 @@ def runBuild(debug):
 
 def main(argv):
     shutil.rmtree(botanDir + "/install", True)
-    runBuild(True)
     runBuild(False)
+    runBuild(True)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

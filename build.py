@@ -128,7 +128,8 @@ def combombBuild(buildClean, buildType, buildJobs):
     else:
         run("make -j" + buildJobs)
     buildLog(combombSrcDir, buildTarget)
-    zipIt(newGitVerStr)
+    if (buildType == "release"):
+        zipIt(newGitVerStr)
 
 def delBuildTree(delDir):
     retries = 0
