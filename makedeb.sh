@@ -31,4 +31,4 @@ cp debian/combomb.desktop build/ComBomb/$PACKAGE/$INSTDIR/share/applications
 cp ../ComBomb/ComBombGui/images/ComBomb128.png build/ComBomb/$PACKAGE/$INSTDIR/share/pixmaps/ComBomb.png
 dpkg-deb --build build/ComBomb/$PACKAGE
 echo "Now run the following command:"
-echo "sudo /root/bin/debimport.sh build/ComBomb/$PACKAGE *.deb"
+echo "sudo /root/bin/debimport.sh build/ComBomb/$PACKAGE*.deb"
