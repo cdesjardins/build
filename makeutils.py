@@ -1,13 +1,18 @@
 #!/usr/bin/env python
-import urllib2, os, tarfile, platform, shutil
+import os, tarfile, platform, shutil, zipfile, sys
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 
 def download(fileUrl):
     print("Downloading: " + fileUrl)
     filename = fileUrl.split('/')[-1]
-    u = urllib2.urlopen(fileUrl)
+    u = urlopen(fileUrl)
     f = open(filename, 'wb')
-    meta = u.info()
-    filesize = int(meta.getheaders("Content-Length")[0])
 
     file_size_dl = 0
     block_sz = 8192
@@ -18,18 +23,22 @@ def download(fileUrl):
 
         file_size_dl += len(buffer)
         f.write(buffer)
-        status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / filesize)
+        status = r"%10d" % (file_size_dl)
         status = status + chr(8)*(len(status)+1)
-        print status,
+        sys.stdout.write(status)
 
     f.close()
 
-def extractCompressedTar(compressedTar):
-    print("Extracting " + compressedTar + "...")
-    filename, fileExtension = os.path.splitext(compressedTar)
-    file = tarfile.open(compressedTar, "r:" + fileExtension[1:])
-    file.extractall()
-    file.close()
+def extractCompressedFile(compressedFile):
+    print("Extracting " + compressedFile + "...")
+    filename, fileExtension = os.path.splitext(compressedFile)
+    if (fileExtension == ".zip"):
+        with zipfile.ZipFile(compressedFile) as zf:
+            zf.extractall(path=".")
+    else:
+        file = tarfile.open(compressedFile, "r:" + fileExtension[1:])
+        file.extractall()
+        file.close()
 
 def which(file, fatal = True, extraDirs = None):
     if (platform.system() == "Windows"):
@@ -72,10 +81,10 @@ def downloadAndExtract(externaldir, url, srcdir, clean):
         shutil.rmtree(srcdir)
 
     if (os.path.exists(srcdir) == False):
-        extractCompressedTar(filename)
+        extractCompressedFile(filename)
     else:
         print("Skip extraction of qt archive because the " + srcdir + " directory already exists")
-    installdir = externaldir + "/install"
+    installdir = os.path.join(externaldir, "install")
     if (os.path.exists(installdir) == True):
         print("Deleting: " + installdir)
         shutil.rmtree(installdir)

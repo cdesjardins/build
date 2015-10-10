@@ -51,9 +51,14 @@ class uncrustify:
                 sys.stdin.read(1)
         return gitVerStr
 
-def run(cmd):
+# if split == False, then cmd must be an array
+def run(cmd, split=True):
     print(cmd)
-    if (call(cmd.split(" "))):
+    if (split == True):
+        cmds = cmd.split(" ")
+    else:
+        cmds = cmd
+    if (call(cmds)):
         sys.exit(1)
 
 def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs):
@@ -65,10 +70,26 @@ def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs):
     run(make)
 
 def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
-    cmake = "cmake ../../../" + baseDir
-    make = "cmake --build . --target install --config " + buildType
-    run(cmake)
-    run(make)
+    if ("VISUALSTUDIOVERSION" in os.environ):
+        msvsVer = os.environ["VISUALSTUDIOVERSION"]
+        msvsVer = msvsVer[:msvsVer.find('.')]
+        if (msvsVer == "10"):
+            gen = "Visual Studio 10 2010"
+        elif (msvsVer == "11"):
+            gen = "Visual Studio 11 2012"
+        elif (msvsVer == "12"):
+            gen = "Visual Studio 12 2013"
+        elif (msvsVer == "14"):
+            gen = "Visual Studio 14 2015"
+        cmake = "cmake ../../../" + baseDir + " -G"
+        make = "cmake --build . --target install --config " + buildType
+        cmake = cmake.split(" ")
+        cmake.append(gen)
+        run(cmake, False)
+        run(make)
+    else:
+        print("Unable to find VISUALSTUDIOVERSION in env, please run from MSVS command prompt")
+        sys.exit(1)
 
 def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs):
     buildTarget = "build/" + baseDir
@@ -116,14 +137,13 @@ def combombBuild(buildClean, buildType, buildJobs):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
-    qtDir = os.getcwd() + "/../external/qt/install"
     uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
     gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
     newGitVerStr = handleComBombDirty(gitVerStr, combombSrcDir)
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
     c = Chdir(buildTarget)
-    qmake = makeutils.which("qmake", extraDirs = [qtDir + "/bin"])
+    qmake = makeutils.which("qmake")
     run(qmake + " " + combombSrcDir + " CONFIG+=" + buildType)
     if (platform.system() == "Windows"):
         run(makeutils.which("jom") + " -j" + buildJobs + " " + buildType)

@@ -10,8 +10,8 @@ boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.59.0/" + boos
 boostdir = boostname + "/boost"
 
 builddir = os.getcwd()
-boostexternaldir = builddir +  "/../external/boost"
-boostsrcdir = boostexternaldir + "/" + boostname
+boostexternaldir = os.path.join(builddir, "..", "external", "boost")
+boostsrcdir = os.path.join(boostexternaldir, boostname)
 
 def runBootstrap():
     bootstrap = []
@@ -25,28 +25,21 @@ def runB2Linux(extraArgs, buildJobs, installdir):
     cmd.extend(extraArgs)
     call(cmd)
 
+# must be run inside a visual studio command prompt
 def runB2Windows(extraArgs, buildJobs, installdir):
     batfilefd, batfilename = tempfile.mkstemp(suffix=".bat", text=True)
-    file = os.fdopen(batfilefd, 'w')
-    msvsfound = False
-    msvsvars = []
-    for ver in range (14, 8, -1):
-        envvar = "VS" + str(ver) + "0COMNTOOLS"
-        msvsvars.append(envvar)
-        if (envvar in os.environ):
-            visualStudioInstallDir = os.environ[envvar];
-            file.write("call \"" + visualStudioInstallDir + "..\\..\\VC\\vcvarsall.bat\" x86\n")
-            file.write("call bootstrap.bat msvc\n")
-            cmd = "b2 --toolset=msvc-" + str(ver) + ".0 " + " ".join(extraArgs) + " link=static runtime-link=static -j " + str(buildJobs) + " install --layout=system --includedir=" + installdir + " -a variant="
-            file.write(cmd + "release --libdir=" + installdir + "/lib/release\n")
-            file.write(cmd + "debug --libdir=" + installdir + "/lib/debug\n")
-            file.close()
-            print batfilename
-            call([batfilename])
-            msvsfound = True
-            break
-    if (msvsfound == False):
-        print("Unable to find env var for MSVS, tried: ", msvsvars)
+    if ("VISUALSTUDIOVERSION" in os.environ):
+        file = os.fdopen(batfilefd, 'w')
+        file.write("call bootstrap.bat msvc\n")
+        cmd = "b2 --toolset=msvc-" + os.environ["VISUALSTUDIOVERSION"] + " " + " ".join(extraArgs) + " link=static runtime-link=static -j " + str(buildJobs) + " install --layout=system --prefix=" + installdir + " --build-dir=obj -a variant="
+        file.write(cmd + "release --libdir=" + os.path.join(installdir, "lib", "release") + "\n")
+        file.write(cmd + "debug --libdir=" + os.path.join(installdir, "lib", "debug") + "\n")
+        file.close()
+        print batfilename
+        call([batfilename])
+        os.remove(batfilename)
+    else:
+        print("Unable to find env var for MSVS: VISUALSTUDIOVERSION")
 
 def runB2(extraArgs, buildJobs, installdir):
     if (platform.system() == "Windows"):
