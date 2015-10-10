@@ -72,7 +72,7 @@ def downloadAndExtract(externaldir, url, srcdir, clean):
         shutil.rmtree(srcdir)
 
     if (os.path.exists(srcdir) == False):
-        makeutils.extractCompressedTar(filename)
+        extractCompressedTar(filename)
     else:
         print("Skip extraction of qt archive because the " + srcdir + " directory already exists")
     installdir = externaldir + "/install"
