@@ -2,7 +2,7 @@
 import os, shutil, sys, platform, glob
 from subprocess import call
 sys.dont_write_bytecode = True
-from which import which
+import makeutils
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
 botanDir = baseDir + "/../botan"
@@ -54,13 +54,9 @@ def runMakePosix():
     run(cmd)
 
 def runMakeWin():
-    with open('Makefile', 'r') as file :
-        makefile = file.read()
-    makefile = makefile.replace('cl /MD', 'cl /MT')
-    with open('Makefile', 'w') as file:
-        file.write(makefile)
-        
-    jom = which("jom", False)
+    makeutils.findReplace("cl /MD", "cl /MT", "Makefile")
+
+    jom = makeutils.which("jom", fatal=False)
     if (jom == None):
         cmd = "nmake install"
     else:

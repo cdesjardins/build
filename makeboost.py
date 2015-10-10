@@ -1,39 +1,14 @@
 #!/usr/bin/env python
-import sys, traceback, tarfile, os, platform, shutil, tempfile, errno, re, urllib2
+import sys, traceback, os, platform, shutil, tempfile, errno, re
 from subprocess import call
+sys.dont_write_bytecode = True
+import makeutils
+
 boostname = "boost_1_59_0"
 boostfile = boostname + ".tar.bz2"
 boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.59.0/" + boostfile
 boostdir = boostname + "/boost"
 
-def downloadBoost():
-    file_name = boosturl.split('/')[-1]
-    u = urllib2.urlopen(boosturl)
-    f = open(file_name, 'wb')
-    meta = u.info()
-    file_size = int(meta.getheaders("Content-Length")[0])
-    print "Downloading: %s Bytes: %s" % (file_name, file_size)
-
-    file_size_dl = 0
-    block_sz = 8192
-    while True:
-        buffer = u.read(block_sz)
-        if not buffer:
-            break
-
-        file_size_dl += len(buffer)
-        f.write(buffer)
-        status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
-        status = status + chr(8)*(len(status)+1)
-        print status,
-
-    f.close()
-
-def extractTar():
-    print("Extracting " + boostfile + "...")
-    file = tarfile.open(boostfile, "r:bz2")
-    file.extractall()
-    file.close()
 
 def runBootstrap():
     bootstrap = []
@@ -85,12 +60,12 @@ def main(argv):
             os.mkdir("../boost")
         os.chdir("../boost")
         if (os.path.exists(boostfile) == False):
-            downloadBoost()
+            makeutils.download(boosturl)
         else:
             print("Skip download of boost archive because the " + boostfile + " already exists")
             
         if (os.path.exists(boostdir) == False):
-            extractTar()
+            makeutils.extractCompressedTar(boostfile)
         else:
             print("Skip extraction of boost archive because the " + boostdir + " directory already exists")
             stagedir = boostdir + "/../stage"

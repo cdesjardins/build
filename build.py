@@ -14,7 +14,7 @@ try:
 except ImportError:
     haveCreateVersion = False
 
-from which import which
+import makeutils
     
 releaseNotes = "releasenotes.txt"
 gitVersions = {}
@@ -37,7 +37,7 @@ class uncrustify:
         run(self.uncrust + " " + directory + " " + ext)
 
     def uncrustify(self, directory):
-        if ((platform.system() == "Linux") and (self.buildType == "release") and (which("uncrustify", False) != None)):
+        if ((platform.system() == "Linux") and (self.buildType == "release") and (makeutils.which("uncrustify", fatal=False) != None)):
             self.callUncrustify(directory, "*.cpp")
             self.callUncrustify(directory, "*.h")
         gitVerStr = ""
@@ -116,16 +116,17 @@ def combombBuild(buildClean, buildType, buildJobs):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
+    qtDir = os.getcwd() + "/../external/qt/Qt"
     uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
     gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
     newGitVerStr = handleComBombDirty(gitVerStr, combombSrcDir)
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
     c = Chdir(buildTarget)
-    qmake = which("qmake")
+    qmake = makeutils.which("qmake", extraDirs = [qtDir + "/bin"])
     run(qmake + " " + combombSrcDir + " CONFIG+=" + buildType)
     if (platform.system() == "Windows"):
-        run(which("jom") + " -j" + buildJobs + " " + buildType)
+        run(makeutils.which("jom") + " -j" + buildJobs + " " + buildType)
     else:
         run("make -j" + buildJobs)
     buildLog(combombSrcDir, buildTarget)
