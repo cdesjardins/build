@@ -13,7 +13,7 @@ else:
 qturl = "http://download.qt.io/official_releases/qt/" + qtversion + "/" + qtversion + ".0/single/" + qtfile
 builddir = os.getcwd()
 qtexternaldir = builddir +  "/../external/qt"
-qtinstdir = qtexternaldir + "/Qt/"
+qtsrcdir = qtexternaldir + "/" + qtname
 
 def run(cmd):
     cmd = ' '.join(cmd.split())
@@ -29,8 +29,8 @@ def runMake(args, buildJobs):
     cmd += " -j " + buildJobs + " " + args
     run(cmd)
     
-def runBuild(buildJobs):
-    cmd = "configure -opensource -nomake examples -nomake tests -prefix " + qtinstdir + " -confirm-license -static -no-openssl -nomake examples -nomake tests -no-compile-examples"
+def runBuild(buildJobs, installdir):
+    cmd = "configure -opensource -nomake examples -nomake tests -prefix " + installdir + " -confirm-license -static -no-openssl -nomake examples -nomake tests -no-compile-examples"
     if (platform.system() == "Windows"):
         cmd += " -opengl desktop -static-runtime"
     else:
@@ -40,30 +40,12 @@ def runBuild(buildJobs):
     runMake("install", buildJobs)
 
 def buildQt(buildJobs, clean):
-    if (os.path.exists(qtexternaldir) == False):
-        os.makedirs(qtexternaldir)
-    os.chdir(qtexternaldir)
-    if (os.path.exists(qtfile) == False):
-        makeutils.download(qturl)
-    else:
-        print("Skip download of qt archive because the " + qtfile + " already exists")
-
-    if ((clean == True) and (os.path.exists(qtname) == True)):
-        shutil.rmtree(qtname)
-
-    if (os.path.exists(qtname) == False):
-        makeutils.extractCompressedTar(qtfile)
-        # fix build error in qt 5.5
-        if (qtversion == "5.5"):
-            makeutils.findReplace("#requires(qtHaveModule(opengl))", "requires(contains(QT_CONFIG, opengl))", qtname + "/qt3d/qt3d.pro")
-
-    else:
-        print("Skip extraction of qt archive because the " + qtname + " directory already exists")
-        if (os.path.exists(qtinstdir) == True):
-            print("Deleting: " + qtinstdir)
-            shutil.rmtree(qtinstdir)
-    os.chdir(qtname)
-    runBuild(buildJobs)
+    installdir = makeutils.downloadAndExtract(qtexternaldir, qturl, qtsrcdir, clean)
+    os.chdir(qtsrcdir)
+    # fix build error in qt 5.5
+    if (qtversion == "5.5"):
+        makeutils.findReplace("#requires(qtHaveModule(opengl))", "requires(contains(QT_CONFIG, opengl))", "qt3d/qt3d.pro")
+    runBuild(buildJobs, installdir)
 
 def main(argv):
     buildJobs = "4"

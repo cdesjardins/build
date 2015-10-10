@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, traceback, os, platform, shutil, tempfile, errno, re
+import sys, traceback, os, platform, tempfile, getopt
 from subprocess import call
 sys.dont_write_bytecode = True
 import makeutils
@@ -9,6 +9,9 @@ boostfile = boostname + ".tar.bz2"
 boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.59.0/" + boostfile
 boostdir = boostname + "/boost"
 
+builddir = os.getcwd()
+boostexternaldir = builddir +  "/../external/boost"
+boostsrcdir = boostexternaldir + "/" + boostname
 
 def runBootstrap():
     bootstrap = []
@@ -17,28 +20,26 @@ def runBootstrap():
         bootstrap = ["./bootstrap.sh"]
         call(bootstrap)
 
-def runB2Linux(extraArgs):
-    cmd = ["./b2", "link=static", "-j", "8", "stage", "-a", "toolset=gcc"]
+def runB2Linux(extraArgs, buildJobs, installdir):
+    cmd = ["./b2", "link=static", "-j", str(buildJobs), "install", "-a", "toolset=gcc", "--prefix=" + installdir]
     cmd.extend(extraArgs)
     call(cmd)
 
-def runB2Windows(extraArgs):
+def runB2Windows(extraArgs, buildJobs, installdir):
     batfilefd, batfilename = tempfile.mkstemp(suffix=".bat", text=True)
     file = os.fdopen(batfilefd, 'w')
     msvsfound = False
     msvsvars = []
-    for ver in range (11, 8, -1):
+    for ver in range (14, 8, -1):
         envvar = "VS" + str(ver) + "0COMNTOOLS"
         msvsvars.append(envvar)
         if (envvar in os.environ):
             visualStudioInstallDir = os.environ[envvar];
             file.write("call \"" + visualStudioInstallDir + "..\\..\\VC\\vcvarsall.bat\" x86\n")
             file.write("call bootstrap.bat msvc\n")
-            cmd = "b2 --toolset=msvc-" + str(ver) + ".0 " + " ".join(extraArgs) + " link=static runtime-link=static -j 8 stage --layout=system -a variant="
-            file.write(cmd + "release\n")
-            file.write("move stage\\lib stage\\release\n")
-            file.write(cmd + "debug\n")
-            file.write("move stage\\lib stage\\debug\n")
+            cmd = "b2 --toolset=msvc-" + str(ver) + ".0 " + " ".join(extraArgs) + " link=static runtime-link=static -j " + str(buildJobs) + " install --layout=system --includedir=" + installdir + " -a variant="
+            file.write(cmd + "release --libdir=" + installdir + "/lib/release\n")
+            file.write(cmd + "debug --libdir=" + installdir + "/lib/debug\n")
             file.close()
             print batfilename
             call([batfilename])
@@ -47,37 +48,31 @@ def runB2Windows(extraArgs):
     if (msvsfound == False):
         print("Unable to find env var for MSVS, tried: ", msvsvars)
 
-def runB2(extraArgs):
+def runB2(extraArgs, buildJobs, installdir):
     if (platform.system() == "Windows"):
-        runB2Windows(extraArgs)
+        runB2Windows(extraArgs, buildJobs, installdir)
     else:
         extraArgs.extend(["cxxflags=-fPIC"]);
-        runB2Linux(extraArgs)
+        runB2Linux(extraArgs, buildJobs, installdir)
     
 def main(argv):
+    buildJobs = "4"
+    clean = False
     try:
-        if (os.path.exists("../boost") == False):
-            os.mkdir("../boost")
-        os.chdir("../boost")
-        if (os.path.exists(boostfile) == False):
-            makeutils.download(boosturl)
-        else:
-            print("Skip download of boost archive because the " + boostfile + " already exists")
-            
-        if (os.path.exists(boostdir) == False):
-            makeutils.extractCompressedTar(boostfile)
-        else:
-            print("Skip extraction of boost archive because the " + boostdir + " directory already exists")
-            stagedir = boostdir + "/../stage"
-            print("Deleting: " + stagedir)
-            if (os.path.exists(stagedir) == True):
-                shutil.rmtree(stagedir)
-        os.chdir(boostname)
+        opts, args = getopt.getopt(argv, "cj:", [])
+        for opt, arg in opts:
+            if (opt in ('-j')):
+                buildJobs = arg
+            if (opt in ('-c')):
+                clean = True
+
+        installdir = makeutils.downloadAndExtract(boostexternaldir, boosturl, boostsrcdir, clean)
+        os.chdir(boostsrcdir)
         runBootstrap()
         extraArgs = [
             "--with-system",
             ]
-        runB2(extraArgs)
+        runB2(extraArgs, buildJobs, installdir)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(exc_type, exc_value, exc_traceback)

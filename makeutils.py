@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import urllib2, os, tarfile, platform
+import urllib2, os, tarfile, platform, shutil
 
 def download(fileUrl):
     print("Downloading: " + fileUrl)
@@ -57,3 +57,27 @@ def findReplace(find, replace, filename):
     with open(filename, 'w') as file:
         file.write(filedata)
 
+def downloadAndExtract(externaldir, url, srcdir, clean):
+    if (os.path.exists(externaldir) == False):
+        os.makedirs(externaldir)
+    cwd = os.getcwd()
+    os.chdir(externaldir)
+    filename = os.path.basename(url)
+    if (os.path.exists(filename) == False):
+        download(url)
+    else:
+        print("Skip download of archive because the " + filename + " already exists")
+
+    if ((clean == True) and (os.path.exists(srcdir) == True)):
+        shutil.rmtree(srcdir)
+
+    if (os.path.exists(srcdir) == False):
+        makeutils.extractCompressedTar(filename)
+    else:
+        print("Skip extraction of qt archive because the " + srcdir + " directory already exists")
+    installdir = externaldir + "/install"
+    if (os.path.exists(installdir) == True):
+        print("Deleting: " + installdir)
+        shutil.rmtree(installdir)
+    os.chdir(cwd)
+    return installdir

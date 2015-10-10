@@ -116,7 +116,7 @@ def combombBuild(buildClean, buildType, buildJobs):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
-    qtDir = os.getcwd() + "/../external/qt/Qt"
+    qtDir = os.getcwd() + "/../external/qt/install"
     uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
     gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
     newGitVerStr = handleComBombDirty(gitVerStr, combombSrcDir)
