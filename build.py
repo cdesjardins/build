@@ -17,7 +17,6 @@ except ImportError:
 import makeutils
     
 releaseNotes = "releasenotes.txt"
-gitVersions = {}
 
 class Chdir:
     def __init__(self, newdir):
@@ -95,7 +94,6 @@ def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
     gitVerStr = uncrustify(buildType).uncrustify("../" + baseDir)
-    gitVersions[baseDir] = gitVerStr
     c = Chdir(buildTarget)
     if (platform.system() == "Linux"):    
         cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs)
@@ -108,38 +106,12 @@ def cleanTarget(buildTarget, buildClean):
     if (os.path.exists(buildTarget) == False):
         os.makedirs(buildTarget)
 
-def handleComBombDirty(gitVerStr, combombSrcDir):
-    for k, v in gitVersions.items():
-        if (v != gitVerStr):
-            c = Chdir(combombSrcDir)
-            dirty = True
-            index = gitVerStr.find("dirty")
-            if (index == -1):
-                gitVerStr += "-libs"
-            else:
-                gitVerStr = gitVerStr.replace("dirty", "libs")
-            cmd = "git tag -a " + gitVerStr + " -m"
-            cmdArray = cmd.split(' ')
-            cmdArray.extend(["\"build script says you are dirty\""])
-            call(cmdArray)
-            gitVerStr += "-dirty"
-            atexit.register(cleanupComBombDirty, gitVerStr=gitVerStr, combombSrcDir=combombSrcDir)
-            break
-    return gitVerStr 
-
-def cleanupComBombDirty(gitVerStr, combombSrcDir):
-    c = Chdir(combombSrcDir)
-    gitVerStr = gitVerStr.replace("-dirty", "")
-    cmd = "git tag -d " + gitVerStr
-    run(cmd)
-
 def combombBuild(buildClean, buildType, buildJobs):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
     uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
     gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
-    newGitVerStr = handleComBombDirty(gitVerStr, combombSrcDir)
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
     c = Chdir(buildTarget)
@@ -151,7 +123,7 @@ def combombBuild(buildClean, buildType, buildJobs):
         run("make -j" + buildJobs)
     buildLog(combombSrcDir, buildTarget)
     if (buildType == "release"):
-        zipIt(newGitVerStr)
+        zipIt(gitVerStr)
 
 def delBuildTree(delDir):
     retries = 0
