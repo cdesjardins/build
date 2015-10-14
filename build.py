@@ -44,7 +44,7 @@ class uncrustify:
             c = Chdir(directory)
             CreateVer = createVersion.CreateVer()
             gitVerStr = CreateVer.getVerStr()
-            if (gitVerStr.find("dirty") > 0):
+            if (gitVerStr.find("dirty") > 0) and (self.buildType == "release"):
                 print("\033[31mBuilding on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "):\033[0m"),
                 sys.stdout.flush()
                 sys.stdin.read(1)
