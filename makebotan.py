@@ -39,7 +39,7 @@ def runConfigure(debug):
         
     cmd = "./configure.py" + \
         " --disable-shared" + \
-        " --disable-modules=tls" + \
+        " --disable-modules=tls,ffi,mce" + \
         " --prefix=" + botanDir + "/install" + \
         " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
         " --build-mode=" + buildMode + \
