@@ -40,19 +40,26 @@ def extractCompressedFile(compressedFile):
         file.extractall()
         file.close()
 
+def _which(file, pathList):
+    for path in pathList:
+        targetFile = os.path.join(path, file)
+        if os.path.exists(targetFile):
+            return targetFile
+    return None
+
 def which(file, fatal = True, extraDirs = None):
     if (platform.system() == "Windows"):
         file += ".exe"
+    ret = None
     if (extraDirs != None):
-        for path in extraDirs:
-            if os.path.exists(path + "/" + file):
-                return path + "/" + file
-    for path in os.environ["PATH"].split(os.pathsep):
-        if os.path.exists(path + "/" + file):
-                return path + "/" + file
-    print(file + " not found")
-    os._exit(1)
-    return None
+        ret = _which(file, extraDirs)
+    if (ret == None):
+        ret = _which(file, os.environ["PATH"].split(os.pathsep))
+    if (ret == None):
+        print(file + " not found")
+        if (fatal == True):
+            os._exit(1)
+    return ret
 
 def findReplace(find, replace, filename):
     filedata = ""
