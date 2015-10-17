@@ -244,7 +244,7 @@ def main(argv):
             buildVals[b] = False
         for b in buildsToRun:
             buildVals[b] = True
-    if (buildClean == True):
+    elif (buildClean == True):
         delBuildTree("../install")
     if (buildVals["CDLogger"] == True):
         cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs)
