@@ -157,7 +157,7 @@ def zipItPosix(filename):
     files["/usr/lib/x86_64-linux-gnu/libxcb.so.1"]              = "ComBomb/lib/libxcb.so.1"
     files["/usr/lib/x86_64-linux-gnu/libxcb-image.so.0"]        = "ComBomb/lib/libxcb-image.so.0"
     files["/usr/lib/x86_64-linux-gnu/libxcb-icccm.so.4"]        = "ComBomb/lib/libxcb-icccm.so.4"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-sync.so.0"]         = "ComBomb/lib/libxcb-sync.so.0"
+    files["/usr/lib/x86_64-linux-gnu/libxcb-sync.so.1"]         = "ComBomb/lib/libxcb-sync.so.1"
     files["/usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0"]       = "ComBomb/lib/libxcb-xfixes.so.0"
     files["/usr/lib/x86_64-linux-gnu/libxcb-shm.so.0"]          = "ComBomb/lib/libxcb-shm.so.0"
     files["/usr/lib/x86_64-linux-gnu/libxcb-randr.so.0"]        = "ComBomb/lib/libxcb-randr.so.0"
