@@ -163,7 +163,7 @@ def zipItPosix(filename):
     files["/usr/lib/x86_64-linux-gnu/libxcb-randr.so.0"]        = "ComBomb/lib/libxcb-randr.so.0"
     files["/usr/lib/x86_64-linux-gnu/libxcb-shape.so.0"]        = "ComBomb/lib/libxcb-shape.so.0"
     files["/usr/lib/x86_64-linux-gnu/libxcb-keysyms.so.1"]      = "ComBomb/lib/libxcb-keysyms.so.1"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-util.so.0"]         = "ComBomb/lib/libxcb-util.so.0"
+    files["/usr/lib/x86_64-linux-gnu/libxcb-util.so.1"]         = "ComBomb/lib/libxcb-util.so.1"
     filename += ".tar.bz2"
     file = tarfile.open(filename, "w:bz2")
     for k, v in files.items():
