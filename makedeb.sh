@@ -30,5 +30,6 @@ cp -a build/ComBomb/ComBomb/bin build/ComBomb/ComBomb/lib build/ComBomb/$PACKAGE
 cp debian/combomb.desktop build/ComBomb/$PACKAGE/$INSTDIR/share/applications
 cp ../ComBomb/ComBombGui/images/ComBomb128.png build/ComBomb/$PACKAGE/$INSTDIR/share/pixmaps/ComBomb.png
 dpkg-deb --build build/ComBomb/$PACKAGE
-echo "Now run the following command:"
-echo "sudo /root/bin/debimport.sh build/ComBomb/$PACKAGE*.deb"
+scp build/ComBomb/$PACKAGE*.deb chrisd.info:/home/chrisd/uploads
+echo "Now run the following command on the remote server:"
+echo "sudo reprepro includedeb jessie /home/chrisd/uploads/$PACKAGE*.deb"
