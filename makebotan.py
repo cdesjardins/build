@@ -32,8 +32,10 @@ def runClean():
                 os.remove(f)
 
 def runConfigure(debug):
+    debugFlags = ""
     if (debug == True):
         buildMode = "debug"
+        debugFlags = " --with-debug-info --no-optimizations"
     else:
         buildMode = "release"
         
@@ -42,9 +44,8 @@ def runConfigure(debug):
         " --disable-modules=tls,ffi,mce" + \
         " --prefix=" + botanDir + "/install" + \
         " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
-        " --build-mode=" + buildMode + \
-        " --disable-avx2" + \
-        " --maintainer-mode"
+        debugFlags + \
+        " --disable-avx2"
     if (platform.system() == "Windows"):
         cmd = "python " + cmd + " --cpu=i386"
     run(cmd)
