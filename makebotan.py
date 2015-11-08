@@ -55,7 +55,7 @@ def runMakePosix():
     run(cmd)
 
 def runMakeWin():
-    makeutils.findReplace("cl /MD", "cl /MT", "Makefile")
+    makeutils.findReplace("cl  /MD", "cl /MT", "Makefile")
 
     jom = makeutils.which("jom", fatal=False)
     if (jom == None):
