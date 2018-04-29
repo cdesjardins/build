@@ -4,9 +4,9 @@ from subprocess import call
 sys.dont_write_bytecode = True
 import makeutils
 
-boostname = "boost_1_65_1"
+boostname = "boost_1_67_0"
 boostfile = boostname + ".tar.bz2"
-boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.65.1/" + boostfile
+boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.67.0/" + boostfile
 boostdir = boostname + "/boost"
 
 builddir = os.getcwd()
