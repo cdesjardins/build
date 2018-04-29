@@ -47,7 +47,9 @@ def runConfigure(debug):
         debugFlags + \
         " --disable-avx2"
     if (platform.system() == "Windows"):
-        cmd = "python " + cmd + " --cpu=i386"
+        cmd = "python " + cmd + " --cpu=i386 --msvc-runtime=MT"
+        if (debug == True):
+            cmd += "d"
     run(cmd)
     
 def runMakePosix():
@@ -55,8 +57,6 @@ def runMakePosix():
     run(cmd)
 
 def runMakeWin():
-    makeutils.findReplace("cl  /MD", "cl /MT", "Makefile")
-
     jom = makeutils.which("jom", fatal=False)
     if (jom == None):
         cmd = "nmake install"
