@@ -31,7 +31,7 @@ def runB2Windows(extraArgs, buildJobs, installdir):
     if ("VISUALSTUDIOVERSION" in os.environ):
         file = os.fdopen(batfilefd, 'w')
         file.write("call bootstrap.bat msvc\n")
-        cmd = "b2 --toolset=msvc-" + os.environ["VISUALSTUDIOVERSION"] + " " + " ".join(extraArgs) + " link=static runtime-link=static -j " + str(buildJobs) + " install --layout=system --prefix=" + installdir + " --build-dir=obj -a variant="
+        cmd = "b2 --toolset=msvc " + " ".join(extraArgs) + " link=static runtime-link=static -j " + str(buildJobs) + " install --layout=system --prefix=" + installdir + " --build-dir=obj address-model=32 -a variant="
         file.write(cmd + "release --libdir=" + os.path.join(installdir, "lib", "release") + "\n")
         file.write(cmd + "debug --libdir=" + os.path.join(installdir, "lib", "debug") + "\n")
         file.close()
