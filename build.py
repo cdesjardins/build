@@ -44,19 +44,20 @@ class uncrustify:
             c = Chdir(directory)
             CreateVer = createVersion.CreateVer()
             gitVerStr = CreateVer.getVerStr()
-            if (gitVerStr.find("dirty") > 0) and (self.buildType == "release"):
-                print("\033[31mBuilding on dirty codebase (" + gitVerStr + " - " + os.getcwd() + "):\033[0m"),
+            if (gitVerStr.find(b"dirty") > 0) and (self.buildType == "release"):
+                print("\033[31mBuilding on dirty codebase (" + str(gitVerStr) + " - " + os.getcwd() + "):\033[0m"),
                 sys.stdout.flush()
                 sys.stdin.read(1)
         return gitVerStr
 
 # if split == False, then cmd must be an array
 def run(cmd, split=True):
-    print(cmd)
     if (split == True):
         cmds = cmd.split(" ")
+        print(cmd)
     else:
         cmds = cmd
+        print(" ".join(cmd))
     if (call(cmds)):
         sys.exit(1)
 
@@ -82,7 +83,9 @@ def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
             gen = "Visual Studio 14 2015"
         elif (msvsVer == "15"):
             gen = "Visual Studio 15 2017"
-        cmake = "cmake ../../../" + baseDir + " -G"
+        elif (msvsVer == "16"):
+            gen = "Visual Studio 16 2019"
+        cmake = "cmake ../../../" + baseDir + " -A Win32 -G"
         make = "cmake --build . --target install --config " + buildType
         cmake = cmake.split(" ")
         cmake.append(gen)
@@ -113,7 +116,7 @@ def combombBuild(buildClean, buildType, buildJobs):
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb" 
     uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
-    gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir)
+    gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir).decode("utf-8")
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
     c = Chdir(buildTarget)

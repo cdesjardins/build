@@ -4,9 +4,9 @@ from subprocess import call
 sys.dont_write_bytecode = True
 import makeutils
 
-boostname = "boost_1_67_0"
+boostname = "boost_1_72_0"
 boostfile = boostname + ".tar.bz2"
-boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.67.0/" + boostfile
+boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.72.0/" + boostfile
 boostdir = boostname + "/boost"
 
 builddir = os.getcwd()
@@ -35,7 +35,7 @@ def runB2Windows(extraArgs, buildJobs, installdir):
         file.write(cmd + "release --libdir=" + os.path.join(installdir, "lib", "release") + "\n")
         file.write(cmd + "debug --libdir=" + os.path.join(installdir, "lib", "debug") + "\n")
         file.close()
-        print batfilename
+        print(batfilename)
         call([batfilename])
         os.remove(batfilename)
     else:

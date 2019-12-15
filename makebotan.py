@@ -27,7 +27,7 @@ def runClean():
     ]
     for p in botanObjs:
         for f in glob.glob(p):
-            print "delete: " + f
+            print("delete: " + f)
             if (os.path.exists(f) == True):
                 os.remove(f)
 
@@ -41,6 +41,7 @@ def runConfigure(debug):
         
     cmd = "./configure.py" + \
         " --disable-shared" + \
+        " --without-documentation" + \
         " --disable-modules=tls,ffi,mce" + \
         " --prefix=" + botanDir + "/install" + \
         " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
