@@ -85,6 +85,8 @@ def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
             gen = "Visual Studio 15 2017"
         elif (msvsVer == "16"):
             gen = "Visual Studio 16 2019"
+        elif (msvsVer == "17"):
+            gen = "Visual Studio 17 2022"
         cmake = "cmake ../../../" + baseDir + " -A Win32 -G"
         make = "cmake --build . --target install --config " + buildType
         cmake = cmake.split(" ")
