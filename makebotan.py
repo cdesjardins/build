@@ -45,8 +45,7 @@ def runConfigure(debug):
         " --disable-modules=tls,ffi,mce" + \
         " --prefix=" + botanDir + "/install" + \
         " --libdir=" + botanDir + "/install/lib/botan/" + buildMode + \
-        debugFlags + \
-        " --disable-avx2"
+        debugFlags
     if (platform.system() == "Windows"):
         cmd = "python " + cmd + " --cpu=i386 --msvc-runtime=MT"
         if (debug == True):
