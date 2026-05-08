@@ -3,6 +3,7 @@ import sys, traceback, os, platform, tempfile, getopt
 from subprocess import call
 sys.dont_write_bytecode = True
 import makeutils
+import multiprocessing
 
 boostname = "boost_1_86_0"
 boostfile = boostname + ".tar.bz2"
@@ -49,7 +50,7 @@ def runB2(extraArgs, buildJobs, installdir):
         runB2Linux(extraArgs, buildJobs, installdir)
     
 def main(argv):
-    buildJobs = "4"
+    buildJobs = str(multiprocessing.cpu_count())
     clean = False
     try:
         opts, args = getopt.getopt(argv, "cj:", [])

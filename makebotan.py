@@ -3,6 +3,7 @@ import os, shutil, sys, platform, glob
 from subprocess import call
 sys.dont_write_bytecode = True
 import makeutils
+import multiprocessing
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
 botanDir = baseDir + "/../botan"
@@ -53,7 +54,7 @@ def runConfigure(debug):
     run(cmd)
     
 def runMakePosix():
-    cmd = "make -j4 install"
+    cmd = "make -j " + str(multiprocessing.cpu_count()) + " install"
     run(cmd)
 
 def runMakeWin():
@@ -61,7 +62,7 @@ def runMakeWin():
     if (jom == None):
         cmd = "nmake install"
     else:
-        cmd = "jom install -j5"
+        cmd = "jom install -j" + str(multiprocessing.cpu_count())
     run(cmd)
 
 def runMake():

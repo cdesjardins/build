@@ -6,6 +6,8 @@
 import shutil, sys, os, platform, zipfile, tarfile, getopt, atexit
 from subprocess import call
 from subprocess import Popen, PIPE
+import multiprocessing
+
 sys.dont_write_bytecode = True
 sys.path.append('../ComBomb/')
 haveCreateVersion = True
@@ -214,7 +216,7 @@ def usage(builds):
     os._exit(1)
 
 def main(argv):
-    buildJobs = "4"
+    buildJobs = str(multiprocessing.cpu_count())
     buildClean = False
     buildVerbose = False
     buildType = "Release"
