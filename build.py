@@ -29,28 +29,31 @@ class Chdir:
         os.chdir(self.origdir)
 
 class uncrustify:
-    def __init__(self, buildType):
+    def __init__(self, buildType, runUncrustify):
         self.home = os.path.dirname(os.path.realpath(__file__))
         self.uncrust = self.home + "/call_Uncrustify.sh"
         self.buildType = buildType.lower()
+        self.runUncrustify = runUncrustify
 
     def callUncrustify(self, directory, ext):
         run(self.uncrust + " " + directory + " " + ext)
 
     def uncrustify(self, directory):
-        if ((platform.system() == "Linux") and (self.buildType == "release") and (makeutils.which("uncrustify", fatal=False) != None)):
+        if (self.runUncrustify and (platform.system() == "Linux") and (self.buildType == "release") and (makeutils.which("uncrustify", fatal=False) != None)):
             self.callUncrustify(directory, "*.cpp")
             self.callUncrustify(directory, "*.h")
-        gitVerStr = ""
-        if (haveCreateVersion == True):
-            c = Chdir(directory)
-            CreateVer = createVersion.CreateVer()
-            gitVerStr = CreateVer.getVerStr()
-            if (gitVerStr.find(b"dirty") > 0) and (self.buildType == "release"):
-                print("\033[31mBuilding on dirty codebase (" + str(gitVerStr) + " - " + os.getcwd() + "):\033[0m"),
-                sys.stdout.flush()
-                sys.stdin.read(1)
-        return gitVerStr
+
+def gitVersionCheck(buildType, directory):
+    gitVerStr = ""
+    if (haveCreateVersion == True):
+        c = Chdir(directory)
+        CreateVer = createVersion.CreateVer()
+        gitVerStr = CreateVer.getVerStr()
+        if (gitVerStr.find(b"dirty") > 0) and (buildType.lower() == "release"):
+            print("\033[31mBuilding on dirty codebase (" + str(gitVerStr) + " - " + os.getcwd() + "):\033[0m"),
+            sys.stdout.flush()
+            sys.stdin.read(1)
+    return gitVerStr
 
 # if split == False, then cmd must be an array
 def run(cmd, split=True):
@@ -99,10 +102,11 @@ def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
         print("Unable to find VISUALSTUDIOVERSION in env, please run from MSVS command prompt")
         sys.exit(1)
 
-def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs):
+def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
-    gitVerStr = uncrustify(buildType).uncrustify("../" + baseDir)
+    uncrustify(buildType, runUncrustify).uncrustify("../" + baseDir)
+    gitVersionCheck(buildType, "../" + baseDir)
     c = Chdir(buildTarget)
     if (platform.system() == "Linux"):    
         cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs)
@@ -115,12 +119,13 @@ def cleanTarget(buildTarget, buildClean):
     if (os.path.exists(buildTarget) == False):
         os.makedirs(buildTarget)
 
-def combombBuild(buildClean, buildType, buildJobs):
+def combombBuild(buildClean, buildType, buildJobs, runUncrustify):
     buildType = buildType.lower()
     combombSrcDir = os.getcwd() + "/../ComBomb"
-    buildTarget = os.getcwd() + "/build/ComBomb" 
-    uncrustify(buildType).uncrustify(os.getcwd() + "/../include")
-    gitVerStr = uncrustify(buildType).uncrustify(combombSrcDir).decode("utf-8")
+    buildTarget = os.getcwd() + "/build/ComBomb"
+    uncrustify(buildType, runUncrustify).uncrustify(os.getcwd() + "/../include")
+    uncrustify(buildType, runUncrustify).uncrustify(combombSrcDir)
+    gitVerStr = gitVersionCheck(buildType, combombSrcDir).decode("utf-8")
     cleanTarget(buildTarget, buildClean)
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
     c = Chdir(buildTarget)
@@ -209,6 +214,7 @@ def usage(builds):
     print(" -r --release")
     print(" -v --verbose")
     print(" -c --clean")
+    print(" -u --uncrustify")
     print(" -j#")
     print("The following modules can be individually built")
     for b in builds:
@@ -219,16 +225,17 @@ def main(argv):
     buildJobs = str(multiprocessing.cpu_count())
     buildClean = False
     buildVerbose = False
+    runUncrustify = False
     buildType = "Release"
     builds = ["QueuePtr", "CDLogger", "cppssh", "ComBomb"]
     buildVals = {}
     for b in builds:
         buildVals[b] = True
-    args = ["help", "debug", "release", "clean", "verbose"]
+    args = ["help", "debug", "release", "clean", "verbose", "uncrustify"]
     args.extend(builds)
     buildsToRun = []
     try:
-        opts, args = getopt.getopt(argv, "hdrcvj:", args)
+        opts, args = getopt.getopt(argv, "hdrcvuj:", args)
     except getopt.GetoptError as e:
         print("Error: " + str(e))
         usage(builds)
@@ -243,6 +250,8 @@ def main(argv):
             buildClean = True
         if (opt in ('-v', '--verbose')):
             buildVerbose = True
+        if (opt in ('-u', '--uncrustify')):
+            runUncrustify = True
         if (opt in ('-j')):
             buildJobs = arg
         if opt[2:] in list(buildVals.keys()):
@@ -256,13 +265,13 @@ def main(argv):
     elif (buildClean == True):
         delBuildTree("../install")
     if (buildVals["CDLogger"] == True):
-        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs)
+        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
     if (buildVals["cppssh"] == True):
-        cmakeBuild("cppssh", buildType, buildClean, buildVerbose, buildJobs)
+        cmakeBuild("cppssh", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
     if (buildVals["QueuePtr"] == True):
-        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs)
+        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
     if (buildVals["ComBomb"] == True):
-        combombBuild(buildClean, buildType, buildJobs)
+        combombBuild(buildClean, buildType, buildJobs, runUncrustify)
     print("Done")
 
 if __name__ == "__main__":
