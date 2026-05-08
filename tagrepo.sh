@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=v`date +%Y.%j`
+VERSION=v`date +%Y.%j.%H`
 DESC=$@
 
 if [ -z "$DESC" ] ; then
