@@ -66,52 +66,60 @@ def run(cmd, split=True):
     if (call(cmds)):
         sys.exit(1)
 
-def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs):
-    cmake = "cmake ../../../" + baseDir + " -DCMAKE_BUILD_TYPE=" + buildType
-    make = "make -j " + buildJobs + " install"
-    if (buildVerbose == True):
-        make += " VERBOSE=1"
-    run(cmake)
-    run(make)
+def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target):
+    cmake = ["cmake", "../../../" + baseDir, "-DCMAKE_BUILD_TYPE=" + buildType]
+    if extraArgs:
+        cmake.extend(extraArgs)
+    run(cmake, split=False)
+    build = ["cmake", "--build", ".", "-j", buildJobs]
+    if target:
+        build.extend(["--target", target])
+    if buildVerbose:
+        build.append("--verbose")
+    run(build, split=False)
 
-def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs):
-    if ("VISUALSTUDIOVERSION" in os.environ):
-        msvsVer = os.environ["VISUALSTUDIOVERSION"]
-        msvsVer = msvsVer[:msvsVer.find('.')]
-        if (msvsVer == "10"):
-            gen = "Visual Studio 10 2010"
-        elif (msvsVer == "11"):
-            gen = "Visual Studio 11 2012"
-        elif (msvsVer == "12"):
-            gen = "Visual Studio 12 2013"
-        elif (msvsVer == "14"):
-            gen = "Visual Studio 14 2015"
-        elif (msvsVer == "15"):
-            gen = "Visual Studio 15 2017"
-        elif (msvsVer == "16"):
-            gen = "Visual Studio 16 2019"
-        elif (msvsVer == "17"):
-            gen = "Visual Studio 17 2022"
-        cmake = "cmake ../../../" + baseDir + " -A Win32 -G"
-        make = "cmake --build . --target install --config " + buildType
-        cmake = cmake.split(" ")
-        cmake.append(gen)
-        run(cmake, False)
-        run(make)
-    else:
+def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target):
+    if "VISUALSTUDIOVERSION" not in os.environ:
         print("Unable to find VISUALSTUDIOVERSION in env, please run from MSVS command prompt")
         sys.exit(1)
+    msvsVer = os.environ["VISUALSTUDIOVERSION"]
+    msvsVer = msvsVer[:msvsVer.find('.')]
+    msvsGenerators = {
+        "10": "Visual Studio 10 2010",
+        "11": "Visual Studio 11 2012",
+        "12": "Visual Studio 12 2013",
+        "14": "Visual Studio 14 2015",
+        "15": "Visual Studio 15 2017",
+        "16": "Visual Studio 16 2019",
+        "17": "Visual Studio 17 2022",
+    }
+    gen = msvsGenerators.get(msvsVer)
+    if gen is None:
+        print("Unsupported Visual Studio version: " + msvsVer)
+        sys.exit(1)
+    cmake = ["cmake", "../../../" + baseDir, "-A", "Win32", "-G", gen]
+    if extraArgs:
+        cmake.extend(extraArgs)
+    run(cmake, split=False)
+    build = ["cmake", "--build", ".", "--config", buildType, "-j", buildJobs]
+    if target:
+        build.extend(["--target", target])
+    if buildVerbose:
+        build.append("--verbose")
+    run(build, split=False)
 
-def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify):
+def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
+               extraArgs=None, target="install"):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
     uncrustify(buildType, runUncrustify).uncrustify("../" + baseDir)
-    gitVersionCheck(buildType, "../" + baseDir)
+    gitVerStr = gitVersionCheck(buildType, "../" + baseDir)
     c = Chdir(buildTarget)
-    if (platform.system() == "Linux"):    
-        cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs)
+    if (platform.system() == "Linux"):
+        cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target)
     else:
-        cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs)
+        cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target)
+    return gitVerStr
 
 def cleanTarget(buildTarget, buildClean):
     if (buildClean == True):
@@ -119,25 +127,20 @@ def cleanTarget(buildTarget, buildClean):
     if (os.path.exists(buildTarget) == False):
         os.makedirs(buildTarget)
 
-def combombBuild(buildClean, buildType, buildJobs, runUncrustify):
-    buildType = buildType.lower()
+def combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath):
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb"
     uncrustify(buildType, runUncrustify).uncrustify(os.getcwd() + "/../include")
-    uncrustify(buildType, runUncrustify).uncrustify(combombSrcDir)
-    gitVerStr = gitVersionCheck(buildType, combombSrcDir).decode("utf-8")
-    cleanTarget(buildTarget, buildClean)
-    shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget);
-    c = Chdir(buildTarget)
-    qmake = makeutils.which("qmake")
-    run(qmake + " " + combombSrcDir + " CONFIG+=" + buildType)
-    if (platform.system() == "Windows"):
-        run(makeutils.which("jom") + " -j" + buildJobs + " " + buildType)
-    else:
-        run("make -j" + buildJobs)
+    extraArgs = ["-DCMAKE_PREFIX_PATH=" + qtPath] if qtPath else None
+    gitVerStr = cmakeBuild(
+        "ComBomb", buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
+        extraArgs=extraArgs, target=None,
+    ).decode("utf-8")
+    shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget)
     buildLog(combombSrcDir, buildTarget)
-    if (buildType == "release"):
-        zipIt(gitVerStr)
+    if (buildType.lower() == "release"):
+        c = Chdir(buildTarget)
+        zipIt(gitVerStr, buildType)
 
 def delBuildTree(delDir):
     retries = 0
@@ -155,8 +158,8 @@ files = {
     "../../../ComBomb/addons/example.py" : "ComBomb/addons/example.py",
 }
 
-def zipItWindows(filename):
-    files["ComBombGui/release/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
+def zipItWindows(filename, buildType):
+    files["ComBombGui/" + buildType + "/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
     filename += ".zip"
     combombZip = zipfile.ZipFile(filename, "w")
     for k, v in files.items():
@@ -165,26 +168,13 @@ def zipItWindows(filename):
 def zipItPosix(filename):
     files["../../../ComBomb/scripts/ComBomb.sh"]                   = "ComBomb/bin/ComBomb.sh"
     files["ComBombGui/ComBombGui"]                              = "ComBomb/bin/ComBombGui"
-    files["/usr/lib/x86_64-linux-gnu/libX11-xcb.so.1"]          = "ComBomb/lib/libX11-xcb.so.1"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-render-util.so.0"]  = "ComBomb/lib/libxcb-render-util.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-render.so.0"]       = "ComBomb/lib/libxcb-render.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb.so.1"]              = "ComBomb/lib/libxcb.so.1"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-image.so.0"]        = "ComBomb/lib/libxcb-image.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-icccm.so.4"]        = "ComBomb/lib/libxcb-icccm.so.4"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-sync.so.1"]         = "ComBomb/lib/libxcb-sync.so.1"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0"]       = "ComBomb/lib/libxcb-xfixes.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-shm.so.0"]          = "ComBomb/lib/libxcb-shm.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-randr.so.0"]        = "ComBomb/lib/libxcb-randr.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-shape.so.0"]        = "ComBomb/lib/libxcb-shape.so.0"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-keysyms.so.1"]      = "ComBomb/lib/libxcb-keysyms.so.1"
-    files["/usr/lib/x86_64-linux-gnu/libxcb-util.so.1"]         = "ComBomb/lib/libxcb-util.so.1"
     filename += ".tar.bz2"
     file = tarfile.open(filename, "w:bz2")
     for k, v in files.items():
         print(os.path.realpath(k))
         file.add(os.path.realpath(k), v)
 
-def zipIt(gitVerStr):
+def zipIt(gitVerStr, buildType):
     vers = gitVerStr.split("-")
 
     #filename = "ComBomb-" + vers[0]
@@ -193,7 +183,7 @@ def zipIt(gitVerStr):
 
     filename = "ComBomb-" + gitVerStr
     if (platform.system() == "Windows"):
-        zipItWindows(filename)
+        zipItWindows(filename, buildType)
     else:
         zipItPosix(filename)
     latest = open("latest.txt", 'w')
@@ -216,6 +206,8 @@ def usage(builds):
     print(" -c --clean")
     print(" -u --uncrustify")
     print(" -j#")
+    print(" --qt=<path>     Path to a Qt6 install (sets CMAKE_PREFIX_PATH for ComBomb).")
+    print("                 Defaults to $CMAKE_PREFIX_PATH if set.")
     print("The following modules can be individually built")
     for b in builds:
         print("    --" + b)
@@ -227,11 +219,12 @@ def main(argv):
     buildVerbose = False
     runUncrustify = False
     buildType = "Release"
+    qtPath = os.environ.get("CMAKE_PREFIX_PATH", "")
     builds = ["QueuePtr", "CDLogger", "cppssh", "ComBomb"]
     buildVals = {}
     for b in builds:
         buildVals[b] = True
-    args = ["help", "debug", "release", "clean", "verbose", "uncrustify"]
+    args = ["help", "debug", "release", "clean", "verbose", "uncrustify", "qt="]
     args.extend(builds)
     buildsToRun = []
     try:
@@ -254,6 +247,8 @@ def main(argv):
             runUncrustify = True
         if (opt in ('-j')):
             buildJobs = arg
+        if (opt == '--qt'):
+            qtPath = arg
         if opt[2:] in list(buildVals.keys()):
             buildsToRun.append(opt[2:])
 
@@ -271,7 +266,7 @@ def main(argv):
     if (buildVals["QueuePtr"] == True):
         cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
     if (buildVals["ComBomb"] == True):
-        combombBuild(buildClean, buildType, buildJobs, runUncrustify)
+        combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath)
     print("Done")
 
 if __name__ == "__main__":
