@@ -164,7 +164,7 @@ files = {
 }
 
 def zipItWindows(filename, buildType):
-    files["ComBombGui/" + buildType + "/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
+    files[buildType + "/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
     filename += ".zip"
     combombZip = zipfile.ZipFile(filename, "w")
     for k, v in files.items():
