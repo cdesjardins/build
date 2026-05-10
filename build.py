@@ -66,8 +66,25 @@ def run(cmd, split=True):
     if (call(cmds)):
         sys.exit(1)
 
-def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target):
-    cmake = ["cmake", "../../../" + baseDir, "-DCMAKE_BUILD_TYPE=" + buildType]
+def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
+               extraArgs=None, target="install"):
+    buildTarget = "build/" + baseDir
+    cleanTarget(buildTarget, buildClean)
+    uncrustify(buildType, runUncrustify).uncrustify("../" + baseDir)
+    gitVerStr = gitVersionCheck(buildType, "../" + baseDir)
+    c = Chdir(buildTarget)
+    # Ninja + cl.exe on Windows requires running from a Visual Studio
+    # Developer Command Prompt (so cl/link/lib are on PATH and INCLUDE/LIB
+    # are set). The architecture is whichever flavour of dev prompt is
+    # active — x86 prompt → 32-bit, x64 prompt → 64-bit.
+    cmake = [
+        "cmake", "-G", "Ninja", "../../../" + baseDir,
+        "-DCMAKE_BUILD_TYPE=" + buildType,
+        # Static CRT (/MT, /MTd) on MSVC; ignored on other compilers. Keeps
+        # the sibling static libs ABI-compatible with ComBomb, otherwise
+        # MSVC raises LNK2038 ("RuntimeLibrary mismatch") at the final link.
+        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>",
+    ]
     if extraArgs:
         cmake.extend(extraArgs)
     run(cmake, split=False)
@@ -77,53 +94,6 @@ def cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs, extraArgs, targ
     if buildVerbose:
         build.append("--verbose")
     run(build, split=False)
-
-def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target):
-    if "VISUALSTUDIOVERSION" not in os.environ:
-        print("Unable to find VISUALSTUDIOVERSION in env, please run from MSVS command prompt")
-        sys.exit(1)
-    msvsVer = os.environ["VISUALSTUDIOVERSION"]
-    msvsVer = msvsVer[:msvsVer.find('.')]
-    msvsGenerators = {
-        "10": "Visual Studio 10 2010",
-        "11": "Visual Studio 11 2012",
-        "12": "Visual Studio 12 2013",
-        "14": "Visual Studio 14 2015",
-        "15": "Visual Studio 15 2017",
-        "16": "Visual Studio 16 2019",
-        "17": "Visual Studio 17 2022",
-    }
-    gen = msvsGenerators.get(msvsVer)
-    if gen is None:
-        print("Unsupported Visual Studio version: " + msvsVer)
-        sys.exit(1)
-    cmake = [
-        "cmake", "../../../" + baseDir, "-A", "Win32", "-G", gen,
-        # Match the static CRT (/MT, /MTd) used by ComBomb so the sibling
-        # static libs link without LNK2038 RuntimeLibrary mismatches.
-        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>",
-    ]
-    if extraArgs:
-        cmake.extend(extraArgs)
-    run(cmake, split=False)
-    build = ["cmake", "--build", ".", "--config", buildType, "-j", buildJobs]
-    if target:
-        build.extend(["--target", target])
-    if buildVerbose:
-        build.append("--verbose")
-    run(build, split=False)
-
-def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
-               extraArgs=None, target="install"):
-    buildTarget = "build/" + baseDir
-    cleanTarget(buildTarget, buildClean)
-    uncrustify(buildType, runUncrustify).uncrustify("../" + baseDir)
-    gitVerStr = gitVersionCheck(buildType, "../" + baseDir)
-    c = Chdir(buildTarget)
-    if (platform.system() == "Linux"):
-        cmakeBuildLinux(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target)
-    else:
-        cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs, extraArgs, target)
     return gitVerStr
 
 def cleanTarget(buildTarget, buildClean):
@@ -145,7 +115,7 @@ def combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, 
     buildLog(combombSrcDir, buildTarget)
     if (buildType.lower() == "release"):
         c = Chdir(buildTarget)
-        zipIt(gitVerStr, buildType)
+        zipIt(gitVerStr)
 
 def delBuildTree(delDir):
     retries = 0
@@ -163,8 +133,8 @@ files = {
     "../../../ComBomb/addons/example.py" : "ComBomb/addons/example.py",
 }
 
-def zipItWindows(filename, buildType):
-    files[buildType + "/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
+def zipItWindows(filename):
+    files["ComBombGui/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
     filename += ".zip"
     combombZip = zipfile.ZipFile(filename, "w")
     for k, v in files.items():
@@ -179,7 +149,7 @@ def zipItPosix(filename):
         print(os.path.realpath(k))
         file.add(os.path.realpath(k), v)
 
-def zipIt(gitVerStr, buildType):
+def zipIt(gitVerStr):
     vers = gitVerStr.split("-")
 
     #filename = "ComBomb-" + vers[0]
@@ -188,7 +158,7 @@ def zipIt(gitVerStr, buildType):
 
     filename = "ComBomb-" + gitVerStr
     if (platform.system() == "Windows"):
-        zipItWindows(filename, buildType)
+        zipItWindows(filename)
     else:
         zipItPosix(filename)
     latest = open("latest.txt", 'w')
