@@ -66,29 +66,39 @@ def run(cmd, split=True):
     if (call(cmds)):
         sys.exit(1)
 
+def isMultiConfigGenerator(generator):
+    return (generator.startswith("Visual Studio")
+            or generator == "Xcode"
+            or "Multi-Config" in generator)
+
 def cmakeBuild(baseDir, buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
-               extraArgs=None, target="install"):
+               extraArgs=None, target="install", generator="Ninja"):
     buildTarget = "build/" + baseDir
     cleanTarget(buildTarget, buildClean)
     uncrustify(buildType, runUncrustify).uncrustify("../" + baseDir)
     gitVerStr = gitVersionCheck(buildType, "../" + baseDir)
     c = Chdir(buildTarget)
+    multiConfig = isMultiConfigGenerator(generator)
     # Ninja + cl.exe on Windows requires running from a Visual Studio
     # Developer Command Prompt (so cl/link/lib are on PATH and INCLUDE/LIB
     # are set). The architecture is whichever flavour of dev prompt is
     # active — x86 prompt → 32-bit, x64 prompt → 64-bit.
-    cmake = [
-        "cmake", "-G", "Ninja", "../../../" + baseDir,
-        "-DCMAKE_BUILD_TYPE=" + buildType,
-        # Static CRT (/MT, /MTd) on MSVC; ignored on other compilers. Keeps
-        # the sibling static libs ABI-compatible with ComBomb, otherwise
-        # MSVC raises LNK2038 ("RuntimeLibrary mismatch") at the final link.
-        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>",
-    ]
+    cmake = ["cmake", "-G", generator, "../../../" + baseDir,
+             # Static CRT (/MT, /MTd) on MSVC; ignored on other compilers. Keeps
+             # the sibling static libs ABI-compatible with ComBomb, otherwise
+             # MSVC raises LNK2038 ("RuntimeLibrary mismatch") at the final link.
+             "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>"]
+    # Multi-config generators (Visual Studio, Xcode, Ninja Multi-Config) pick
+    # the build type at build time via --config; they ignore CMAKE_BUILD_TYPE
+    # at configure time and warn if you set it.
+    if not multiConfig:
+        cmake.append("-DCMAKE_BUILD_TYPE=" + buildType)
     if extraArgs:
         cmake.extend(extraArgs)
     run(cmake, split=False)
     build = ["cmake", "--build", ".", "-j", buildJobs]
+    if multiConfig:
+        build.extend(["--config", buildType])
     if target:
         build.extend(["--target", target])
     if buildVerbose:
@@ -102,14 +112,14 @@ def cleanTarget(buildTarget, buildClean):
     if (os.path.exists(buildTarget) == False):
         os.makedirs(buildTarget)
 
-def combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath):
+def combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath, generator):
     combombSrcDir = os.getcwd() + "/../ComBomb"
     buildTarget = os.getcwd() + "/build/ComBomb"
     uncrustify(buildType, runUncrustify).uncrustify(os.getcwd() + "/../include")
     extraArgs = ["-DCMAKE_PREFIX_PATH=" + qtPath] if qtPath else None
     gitVerStr = cmakeBuild(
         "ComBomb", buildType, buildClean, buildVerbose, buildJobs, runUncrustify,
-        extraArgs=extraArgs, target=None,
+        extraArgs=extraArgs, target=None, generator=generator,
     ).decode("utf-8")
     shutil.copy(combombSrcDir + "/ComBombGui/images/ComBomb64.png", buildTarget)
     buildLog(combombSrcDir, buildTarget)
@@ -186,6 +196,9 @@ def usage(builds):
     print(" -j#")
     print(" --qt=<path>     Path to a Qt6 install (sets CMAKE_PREFIX_PATH for ComBomb).")
     print("                 Defaults to $CMAKE_PREFIX_PATH if set.")
+    print(" --generator=<g> CMake generator. Defaults to \"Ninja\".")
+    print("                 Examples: \"Ninja\", \"Ninja Multi-Config\", \"Visual Studio 17 2022\",")
+    print("                 \"Unix Makefiles\".")
     print("The following modules can be individually built")
     for b in builds:
         print("    --" + b)
@@ -198,11 +211,12 @@ def main(argv):
     runUncrustify = False
     buildType = "Release"
     qtPath = os.environ.get("CMAKE_PREFIX_PATH", "")
+    generator = "Ninja"
     builds = ["QueuePtr", "CDLogger", "cppssh", "ComBomb"]
     buildVals = {}
     for b in builds:
         buildVals[b] = True
-    args = ["help", "debug", "release", "clean", "verbose", "uncrustify", "qt="]
+    args = ["help", "debug", "release", "clean", "verbose", "uncrustify", "qt=", "generator="]
     args.extend(builds)
     buildsToRun = []
     try:
@@ -227,6 +241,8 @@ def main(argv):
             buildJobs = arg
         if (opt == '--qt'):
             qtPath = arg
+        if (opt == '--generator'):
+            generator = arg
         if opt[2:] in list(buildVals.keys()):
             buildsToRun.append(opt[2:])
 
@@ -238,13 +254,13 @@ def main(argv):
     elif (buildClean == True):
         delBuildTree("../install")
     if (buildVals["CDLogger"] == True):
-        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
+        cmakeBuild("CDLogger", buildType, buildClean, buildVerbose, buildJobs, runUncrustify, generator=generator)
     if (buildVals["cppssh"] == True):
-        cmakeBuild("cppssh", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
+        cmakeBuild("cppssh", buildType, buildClean, buildVerbose, buildJobs, runUncrustify, generator=generator)
     if (buildVals["QueuePtr"] == True):
-        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs, runUncrustify)
+        cmakeBuild("QueuePtr", buildType, buildClean, buildVerbose, buildJobs, runUncrustify, generator=generator)
     if (buildVals["ComBomb"] == True):
-        combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath)
+        combombBuild(buildClean, buildType, buildVerbose, buildJobs, runUncrustify, qtPath, generator)
     print("Done")
 
 if __name__ == "__main__":
