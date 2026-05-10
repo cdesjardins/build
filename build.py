@@ -97,7 +97,12 @@ def cmakeBuildWindows(baseDir, buildType, buildVerbose, buildJobs, extraArgs, ta
     if gen is None:
         print("Unsupported Visual Studio version: " + msvsVer)
         sys.exit(1)
-    cmake = ["cmake", "../../../" + baseDir, "-A", "Win32", "-G", gen]
+    cmake = [
+        "cmake", "../../../" + baseDir, "-A", "Win32", "-G", gen,
+        # Match the static CRT (/MT, /MTd) used by ComBomb so the sibling
+        # static libs link without LNK2038 RuntimeLibrary mismatches.
+        "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>",
+    ]
     if extraArgs:
         cmake.extend(extraArgs)
     run(cmake, split=False)
