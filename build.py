@@ -134,7 +134,10 @@ files = {
 }
 
 def zipItWindows(filename):
-    files["ComBombGui/ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
+    # qt_standard_project_setup() forces RUNTIME_OUTPUT_DIRECTORY to the top
+    # of the build tree on Windows, so the executable lives flat alongside
+    # its (would-be) DLL dependencies — not under a per-subdir folder.
+    files["ComBombGui.exe"] = "ComBomb/ComBombGui.exe"
     filename += ".zip"
     combombZip = zipfile.ZipFile(filename, "w")
     for k, v in files.items():
