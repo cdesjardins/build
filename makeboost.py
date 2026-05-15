@@ -5,9 +5,9 @@ sys.dont_write_bytecode = True
 import makeutils
 import multiprocessing
 
-boostname = "boost_1_86_0"
+boostname = "boost_1_91_0"
 boostfile = boostname + ".tar.bz2"
-boosturl = "http://downloads.sourceforge.net/project/boost/boost/1.86.0/" + boostfile
+boosturl = "https://archives.boost.io/release/1.91.0/source/" + boostfile
 boostdir = boostname + "/boost"
 
 builddir = os.getcwd()
@@ -24,6 +24,7 @@ def runBootstrap():
 def runB2Linux(extraArgs, buildJobs, installdir):
     cmd = ["./b2", "link=static", "-j", str(buildJobs), "install", "-a", "toolset=gcc", "--prefix=" + installdir]
     cmd.extend(extraArgs)
+    print(" ".join(cmd))
     call(cmd)
 
 # must be run inside a visual studio command prompt
@@ -64,7 +65,7 @@ def main(argv):
         os.chdir(boostsrcdir)
         runBootstrap()
         extraArgs = [
-            "--with-system",
+            "--with-headers",
             ]
         runB2(extraArgs, buildJobs, installdir)
     except:
