@@ -6,7 +6,7 @@ import makeutils
 import multiprocessing
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
-botanDir = baseDir + "/../botan"
+botanDir = baseDir + "/../external/botan"
 
 def run(cmd):
     print(cmd)
