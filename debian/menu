@@ -1,3 +1,0 @@
-?package(ComBomb):needs=X11|wm section=Applications/Programming\
-  title="ComBomb" \
-  command="/usr/bin/ComBomb.sh"
