@@ -1,0 +1,21 @@
+# Extension commands contributed by the build project. Referenced from the
+# "build" project entry in ComBomb/west.yml and cppssh/west.yml, which is what
+# makes these available as "west cb-*" inside either workspace.
+west-commands:
+  - file: west_commands.py
+    commands:
+      - name: cb-build
+        class: CbBuild
+        help: build the ComBomb modules
+      - name: cb-shell
+        class: CbShell
+        help: open a shell in the Ubuntu 22.04 build container
+      - name: cb-boost
+        class: CbBoost
+        help: build the vendored Boost
+      - name: cb-botan
+        class: CbBotan
+        help: build Botan
+      - name: cb-tag
+        class: CbTag
+        help: tag a release across every project in the workspace
