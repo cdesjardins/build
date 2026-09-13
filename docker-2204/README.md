@@ -24,12 +24,17 @@ the binary: static Qt 6.8.3, vendored Boost, Botan, and `-static-libstdc++`.
 - `Dockerfile` — the 22.04 builder image (`combomb-build:2204`): gcc-12/g++-12,
   modern cmake via pip, and the xcb / wayland / fontconfig / freetype dev libs Qt
   needs. Note `python-is-python3` — the vendored `make*.py` use `/usr/bin/env python`.
-- `build-in-container.sh` — runs *inside* the container: builds static Qt (only
-  if not already installed), then Boost → Botan → ComBomb. Paths derive from the
-  script location; override with `QT_SRC` / `QT_BUILD` / `QT_PREFIX` / `JOBS` /
-  `FORCE_QT`.
+  It also carries the build environment (`CC`/`CXX`, `HOME`, `PATH`, and git's
+  `safe.directory`), so a shell in the container is set up the same way the
+  one-shot build is.
+- `build-in-container.sh` — the one-shot build, run *inside* the container:
+  builds static Qt (only if not already installed), then Boost → Botan → ComBomb.
+  Paths derive from the script location; override with `QT_SRC` / `QT_BUILD` /
+  `QT_PREFIX` / `JOBS` / `FORCE_QT`.
 - `run.sh` — host driver: builds the image and runs the container with `~/sw`
-  bind-mounted at the same absolute path, as your uid:gid.
+  bind-mounted at the same absolute path, as your uid:gid. With no arguments it
+  runs the one-shot build; `run.sh shell` gives you an interactive container
+  instead.
 
 ## Prerequisites
 
@@ -52,7 +57,15 @@ cd ~/sw/ComBomb/build/docker-2204
 ./run.sh                      # builds Qt only if not already installed, then ComBomb
 FORCE_QT=1 ./run.sh           # force a fresh Qt rebuild
 DOCKER="sudo docker" ./run.sh # if not yet in the docker group
+./run.sh shell                # interactive container instead of a build
 ```
+
+`run.sh shell` is the one to reach for day to day: it drops you in
+`ComBomb/build` with the toolchain preset and `CMAKE_PREFIX_PATH` pointing at the
+22.04 Qt, so `./build.py` behaves exactly as it does on the host, just against
+glibc 2.35. `build.py` itself knows nothing about docker — running it inside this
+container is the only difference. From anywhere in the west workspace,
+`west cb-shell` is the same thing.
 
 Output binary:
 `~/sw/ComBomb/build/build/ComBomb/ComBombGui/ComBombGui`

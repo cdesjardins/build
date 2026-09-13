@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Runs INSIDE the ubuntu:22.04 container (see Dockerfile), as the invoking uid,
-# with the ~/sw workspace bind-mounted at the SAME absolute path as on the host
-# (so the baked-in Qt prefix and all absolute paths match host and container).
+# The one-shot build. Runs INSIDE the ubuntu:22.04 container (see Dockerfile),
+# which supplies the toolchain environment (CC/CXX, HOME, PATH, git safe.directory).
+# Started by "run.sh"; for an interactive container instead, use "run.sh shell".
+#
+# Runs as the invoking uid, with the ~/sw workspace bind-mounted at the SAME
+# absolute path as on the host, so the baked-in Qt prefix and all absolute paths
+# match host and container.
 #
 # Rebuilds the entire static chain — Qt + Boost + Botan + ComBomb — so the final
 # ComBombGui binary's glibc floor is 2.35 and it runs on Ubuntu 22.04+.
@@ -18,11 +22,6 @@
 # the existing install and skip straight to Boost/Botan/ComBomb. Force a Qt
 # rebuild (new Qt version, changed configure flags) with FORCE_QT=1.
 set -euo pipefail
-
-export CC=gcc-12 CXX=g++-12
-export HOME=/tmp
-export PATH=/usr/local/bin:$PATH
-git config --global --add safe.directory '*' || true
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"          # ComBomb/build

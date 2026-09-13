@@ -27,3 +27,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # 22.04 ships cmake 3.22; Qt 6.8 builds with it but pull a modern cmake to be safe.
 RUN pip3 install --no-cache-dir "cmake>=3.28,<4"
+
+# The build environment belongs to the image, not to one entry point, so that a
+# shell from "run.sh shell" is set up exactly like the one-shot build script.
+ENV CC=gcc-12 CXX=g++-12
+ENV HOME=/tmp
+ENV PATH=/usr/local/bin:$PATH
+
+# The container runs as the invoking uid against a bind-mounted workspace, so
+# git needs those repos marked safe. --system because HOME is ephemeral.
+RUN git config --system --add safe.directory '*'
