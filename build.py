@@ -50,9 +50,8 @@ def gitVersionCheck(buildType, directory):
         CreateVer = createVersion.CreateVer()
         gitVerStr = CreateVer.getVerStr()
         if (gitVerStr.find(b"dirty") > 0) and (buildType.lower() == "release"):
-            print("\033[31mBuilding on dirty codebase (" + str(gitVerStr) + " - " + os.getcwd() + "):\033[0m"),
+            print("\033[31mBuilding on dirty codebase (" + str(gitVerStr) + " - " + os.getcwd() + ")\033[0m")
             sys.stdout.flush()
-            sys.stdin.read(1)
     return gitVerStr
 
 # if split == False, then cmd must be an array
