@@ -156,6 +156,8 @@ def zipItWindows(filename):
     combombZip = zipfile.ZipFile(filename, "w")
     for k, v in files.items():
         combombZip.write(k, v, zipfile.ZIP_DEFLATED)
+    # The central directory is only written on close.
+    combombZip.close()
     
 def zipItPosix(filename):
     files["../../../ComBomb/scripts/ComBomb.sh"]                   = "ComBomb/bin/ComBomb.sh"
@@ -165,6 +167,7 @@ def zipItPosix(filename):
     for k, v in files.items():
         print(os.path.realpath(k))
         file.add(os.path.realpath(k), v)
+    file.close()
 
 def zipIt(gitVerStr):
     vers = gitVerStr.split("-")
