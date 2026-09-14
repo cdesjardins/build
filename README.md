@@ -99,9 +99,10 @@ west cb-build
   west cb-tag "what changed in this release"
   ```
 
-  Tags every project with `v<year>.<dayofyear>.<hour>` and pushes the tags, then
-  freezes the manifest to SHAs, commits it to the manifest repository and tags
-  that commit. `west init -m <manifest repo url> --mr <tag>` reproduces the
+  Runs `west update` first, so every project's HEAD is the revision the manifest
+  names and the tags land on the same commits the freeze records. Then tags every
+  project with `v<year>.<dayofyear>.<hour>`, pushes the tags, freezes the manifest
+  to SHAs, commits it to the manifest repository and tags that commit. `west init -m <manifest repo url> --mr <tag>` reproduces the
   release exactly.
 
 - **`release.py`** — publishes a release. Takes the version from

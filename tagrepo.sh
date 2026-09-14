@@ -9,6 +9,12 @@ elif ! TOPDIR=`west topdir 2>/dev/null` ; then
     echo "Not in a west workspace"
 else
     cd "$TOPDIR"
+    # Tags go on each project's HEAD, while "west manifest --freeze" records
+    # each project's manifest-rev. Update first so the two are the same commit,
+    # otherwise a project whose checkout is ahead of manifest-rev gets tagged at
+    # one commit and frozen at another. No -k here: the detached checkouts this
+    # leaves behind are exactly the revisions the manifest names.
+    west update
     MANIFEST=`west manifest --path`
     TMPBRANCH=tagrepo-$VERSION
     # west forall includes the manifest repository by default. Leave it out
