@@ -168,3 +168,9 @@ Requires the GitHub CLI (`gh`) authenticated for the ComBomb repository
 - west, for the `cb-*` commands only (`pip install west`).
 - Docker, for `cb-shell` and `docker-2204/run.sh` only.
 - The GitHub CLI (`gh`), authenticated, for `cb-release` only.
+
+## License
+
+These build scripts are distributed under the **BSD 3-Clause License**. See the
+[`LICENSE`](LICENSE) file at the project root for the full text. Each script
+carries an `SPDX-License-Identifier: BSD-3-Clause` tag.

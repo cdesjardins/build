@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+
+# build - ComBomb build scripts
+# Copyright (c) 2015-2026, Chris Desjardins
+# https://github.com/cdesjardins/ComBomb cjd@chrisd.info
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# See the LICENSE file at the project root for the full license text.
+
 # The one-shot build. Runs INSIDE the ubuntu:22.04 container (see Dockerfile),
 # which supplies the toolchain environment (CC/CXX, HOME, PATH, git safe.directory).
 # Started by "run.sh"; for an interactive container instead, use "run.sh shell".

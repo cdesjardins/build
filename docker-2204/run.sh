@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+
+# build - ComBomb build scripts
+# Copyright (c) 2015-2026, Chris Desjardins
+# https://github.com/cdesjardins/ComBomb cjd@chrisd.info
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# See the LICENSE file at the project root for the full license text.
+
 # Host-side driver for the ubuntu:22.04 build container.
 #
 #   ./run.sh          one-shot build: Qt (first run only), then Boost, Botan and

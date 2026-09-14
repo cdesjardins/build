@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+# build - ComBomb build scripts
+# Copyright (c) 2015-2026, Chris Desjardins
+# https://github.com/cdesjardins/ComBomb cjd@chrisd.info
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# See the LICENSE file at the project root for the full license text.
+
 # Publishes a release to GitHub.
 #
 # The version comes from the tag the ComBomb checkout sits on, so this script
