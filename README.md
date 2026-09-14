@@ -15,6 +15,7 @@ All python scripts work with python 2.6 or higher, including python 3.x.
 | `west cb-boost` | `makeboost.py` | downloads and builds Boost into `external/boost` |
 | `west cb-botan` | `makebotan.py` | builds Botan into `external/botan/install` |
 | `west cb-tag` | `tagrepo.sh` | tags a release across every project in the workspace |
+| `west cb-release` | `release.py` | builds the tagged sources and publishes them to GitHub |
 
 They run from anywhere inside the workspace, with `build/` as the working
 directory, and pass every argument through untouched — so `west cb-build -h`
@@ -103,12 +104,59 @@ west cb-build
   that commit. `west init -m <manifest repo url> --mr <tag>` reproduces the
   release exactly.
 
+- **`release.py`** — publishes a release. Takes the version from
+  `createVersion`, the same module the build uses to stamp the binary and name
+  the archive, and refuses to run unless that version is an exact tag — so it
+  can never create one. Builds (container on Linux, native on Windows), then
+  creates the GitHub release if it is missing and uploads this platform's
+  artifact to it.
+
+  ```
+  -n --dry-run    Build and check, but neither create the release nor upload
+     --no-build   Publish the artifact already in the build tree
+     --qt=<path>  Path to a Qt6 install, passed to build.py on Windows
+  -j#             Parallel build jobs
+  ```
+
 - **`makeutils.py`** — shared helpers for the scripts above, not an entry point.
 
 - **`call_Uncrustify.sh`, `uncrustify.cfg`** — style pass, run by `build.py -u`
   on Linux release builds when uncrustify is installed.
 
 - **`docker-2204/`** — the Ubuntu 22.04 builder image and its driver scripts.
+
+## Cutting a release
+
+Tagging happens once, on one machine. Publishing happens on each platform you
+ship from, and never tags anything:
+
+```bash
+# once, wherever you like
+west cb-tag "what changed in this release"    # tags every project, freezes the
+                                              # manifest, leaves ComBomb on the tag
+west cb-release                               # container build, creates the
+                                              # GitHub release, uploads the tarball
+
+# later, on the other platform
+git -C ComBomb fetch --tags
+git -C ComBomb checkout v2026.257.14
+west update                                   # frozen manifest pins every project
+west cb-release                               # native build, adds the zip to the
+                                              # release that is already there
+```
+
+The second `west update` is what makes both platforms build the same sources:
+the manifest committed at the tag pins every project to a SHA.
+
+`release.py` never creates a tag. It takes the version from `createVersion` —
+so the artifact it publishes is the one the build just named — and refuses to
+run unless that version names an existing tag. It also passes `--verify-tag` to
+`gh release create`, which aborts rather than pushing a tag that is not on the
+remote yet. The second platform finds the release already present and only
+uploads.
+
+Requires the GitHub CLI (`gh`) authenticated for the ComBomb repository
+(`gh auth login`); the release attaches to whatever ComBomb's origin points at.
 
 ## Requirements
 
@@ -118,3 +166,4 @@ west cb-build
   ComBomb GUI module.
 - west, for the `cb-*` commands only (`pip install west`).
 - Docker, for `cb-shell` and `docker-2204/run.sh` only.
+- The GitHub CLI (`gh`), authenticated, for `cb-release` only.

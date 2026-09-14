@@ -61,6 +61,11 @@ class CbBuild(_ScriptCommand):
     cmdName = "cb-build"
     cmdHelp = "build the ComBomb modules"
 
+class CbRelease(_ScriptCommand):
+    script = "release.py"
+    cmdName = "cb-release"
+    cmdHelp = "publish the tagged sources to GitHub"
+
 class CbShell(_ScriptCommand):
     script = "docker-2204/run.sh"
     scriptArgs = ["shell"]

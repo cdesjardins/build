@@ -24,14 +24,19 @@ else
 
     west manifest --freeze -o west.yml.tmp
     mv west.yml.tmp "$MANIFEST"
+    MANIFESTDIR=`dirname "$MANIFEST"`
     pushd .
-    cd `dirname "$MANIFEST"`
+    cd "$MANIFESTDIR"
     ORIG=`git symbolic-ref -q --short HEAD || git rev-parse HEAD`
     git checkout -b "$TMPBRANCH"
     git commit -a -m "$DESC"
     git tag -a "$VERSION" -m "$DESC"
     git push origin "refs/tags/$VERSION"
-    git checkout "$ORIG"
+    # Leave the manifest repository on the tag: that is the state release.py
+    # publishes from, and the state anyone reproducing the release checks out.
+    git checkout "$VERSION"
     git branch -D "$TMPBRANCH"
     popd
+    echo "### $VERSION tagged and pushed; $MANIFESTDIR is at that tag"
+    echo "### publish it with 'west cb-release', or go back with 'git -C $MANIFESTDIR checkout $ORIG'"
 fi

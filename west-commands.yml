@@ -16,6 +16,9 @@ west-commands:
       - name: cb-botan
         class: CbBotan
         help: build Botan
+      - name: cb-release
+        class: CbRelease
+        help: publish the tagged sources to GitHub
       - name: cb-tag
         class: CbTag
         help: tag a release across every project in the workspace
