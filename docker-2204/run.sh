@@ -57,8 +57,15 @@ shell)
     fi
     echo "### shell in $IMAGE (workspace at $SW_ROOT, starting in $BUILD_DIR)"
     echo "### CMAKE_PREFIX_PATH is set, so ./build.py picks up the 22.04 Qt"
+    # Ask docker for a tty only when there is one, so that
+    #   echo ./build.py | ./run.sh shell
+    # works as well as an interactive session does.
+    TTY=""
+    if [ -t 0 ] ; then
+        TTY="-t"
+    fi
     # CMAKE_PREFIX_PATH is what build.py falls back to when --qt is not given.
-    $DOCKER run --rm -it \
+    $DOCKER run --rm -i $TTY \
       --user "$(id -u):$(id -g)" \
       -e JOBS="${JOBS:-$(nproc)}" \
       -e QT_PREFIX="$QT_PREFIX" \
